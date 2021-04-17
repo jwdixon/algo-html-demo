@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+</head>
+
+<body>
+    <div>
+        <button id="check">Check AlgoSigner</button>
+        <code id="check-code">AlgoSigner is NOT installed.</code>
+    </div>
+    <div>
+        <button id="connect">Connect to AlgoSigner</button>
+        <code id="connect-code">response here</code>
+    </div>
+    <div>
+        <button id="accounts">Retrieve TestNet Accounts</button>
+        <code id="accounts-code">response here</code>
+    </div>
+
+    <div>
+        <button id="status">Get Status</button>
+        <code id="status-code">response here</code>
+    </div>
+
+    <div>
+        <input id="name" placeholder="Name">
+        <button id="assets">Get the First Asset That Matches</button>
+        <code id="assets-code">response here</code>
+    </div>
+
+
+    <script>
+        function check() {
+            let elementOfConcern = document.getElementById('check-code');
+
+            if (typeof AlgoSigner !== 'undefined') {
+                elementOfConcern.innerHTML = 'AlgoSigner is installed.';
+            } else {
+                elementOfConcern.innerHTML = 'AlgoSigner is NOT installed.';
+            };
+        }
+
+        function connect() {
+            let elementOfConcern = document.getElementById('connect-code');
+
+            AlgoSigner.connect()
+                .then((d) => {
+                    elementOfConcern.innerHTML = JSON.stringify(d);
+                })
+                .catch((e) => {
+                    console.error(e);
+                    elementOfConcern.innerHTML = JSON.stringify(e);
+                });
+        }
+
+        function accounts() {
+            let elementOfConcern = document.getElementById('accounts-code');
+
+            AlgoSigner.accounts({
+                    ledger: 'TestNet'
+                })
+                .then((d) => {
+                    elementOfConcern.innerHTML = JSON.stringify(d);
+                })
+                .catch((e) => {
+                    console.error(e);
+                    elementOfConcern.innerHTML = JSON.stringify(e);
+                });
+        }
+
+        function status() {
+            let elementOfConcern = document.getElementById('status-code');
+
+            AlgoSigner.algod({
+                    ledger: 'TestNet',
+                    path: '/v2/status'
+                })
+                .then((d) => {
+                    elementOfConcern.innerHTML = JSON.stringify(d);
+                })
+                .catch((e) => {
+                    console.error(e);
+                    elementOfConcern.innerHTML = JSON.stringify(e);
+                });
+        }
+
+        function assets() {
+            let elementOfConcern = document.getElementById('assets-code');
+
+            const name = document.getElementById('name').value;
+            const limit = 1;
+
+            AlgoSigner.indexer({
+                    ledger: 'TestNet',
+                    path: `/v2/assets?name=${name}&limit=${limit}`,
+                })
+                .then((d) => {
+                    elementOfConcern.innerHTML = JSON.stringify(d);
+                })
+                .catch((e) => {
+                    console.error(e);
+                    elementOfConcern.innerHTML = JSON.stringify(e);
+                });
+        }
+
+        document.getElementById('check').addEventListener('click', check);
+        document.getElementById('connect').addEventListener('click', connect);
+        document.getElementById('accounts').addEventListener('click', accounts);
+        document.getElementById('status').addEventListener('click', status);
+        document.getElementById('assets').addEventListener('click', assets);
+    </script>
+</body>
