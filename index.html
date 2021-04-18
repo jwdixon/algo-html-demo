@@ -1,119 +1,368 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title></title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
+    integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
+    crossorigin="anonymous" />
 </head>
- 
+
 <body>
-    <div>
-        <button id="check">Check AlgoSigner</button>
-        <code id="check-code">AlgoSigner is NOT installed.</code>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://algorand.com">
+        <img src="algorand_logo_mark_black.svg" style="height:100px;">
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="algoDemoNavbar">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
     </div>
-    <div>
-        <button id="connect">Connect to AlgoSigner</button>
-        <code id="connect-code">response here</code>
+    <div id="algoDemoNavbar" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item">
+          Introduction
+        </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Transactions
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item">
+              ALGO Transfer
+            </a>
+            <a class="navbar-item">
+              ASA Transfer
+            </a>
+            <a class="navbar-item">
+              Asset Creation
+            </a>
+            <a class="navbar-item">
+              Atomic Transfer
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Smart Contracts
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item">
+              Limit Order Contract
+            </a>
+            <a class="navbar-item">
+              Hash Time Lock Contract
+            </a>
+            <a class="navbar-item">
+              Split Contract
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Tools
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item">
+              TestNet ALGO Faucet
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <button class="button is-info" id="refreshaccounts">Refresh Accounts</button>
+        </div>
+      </div>
     </div>
-    <div>
-        <button id="accounts">Retrieve TestNet Accounts</button>
-        <code id="accounts-code">response here</code>
-    </div>
+  </nav>
 
-    <div>
-        <button id="status">Get Status</button>
-        <code id="status-code">response here</code>
-    </div>
+  <section class="section">
+    <div class="container">
+      <article id="successDialog" class="message is-success is-hidden">
+        <div class="message-header">
+          <p>Success</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          Your transaction was successfully sent.
+        </div>
+      </article>
+      <article id="errorDialog" class="message is-danger is-hidden">
+        <div class="message-header">
+          <p>Error</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          An error occurred: <span id="errorMessage"></span>
+        </div>
+      </article>
 
-    <div>
-        <input id="name" placeholder="Name">
-        <button id="assets">Get the First Asset That Matches</button>
-        <code id="assets-code">response here</code>
-    </div>
+      <div id="divCheck" class="is-hidden">
+        <h1 class="title">AlgoSigner not installed!</h1>
+        <p class="subtitle">
+          You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
+        </p>
+      </div>
 
+      <div id="divTransaction" class="is-hidden">
+        <h1 class="title">Algo Transfer</h1>
 
-    <script>
-        function check() {
-            let elementOfConcern = document.getElementById('check-code');
+        <p class="subtitle">
+          If you don't have any Algos to test with, use the TestNet Faucet in the Tools menu to add Algos to your
+          TestNet account.
+        </p>
 
-            if (typeof AlgoSigner !== 'undefined') {
-                elementOfConcern.innerHTML = 'AlgoSigner is installed.';
-            } else {
-                elementOfConcern.innerHTML = 'AlgoSigner is NOT installed.';
-            };
-        }
+        <div class="columns">
+          <div class="column">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">From</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="from">
+                        <option>No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">To</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="to">
+                        <option>No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Amount</label>
+              </div>
+              <div class="field-body">
+                <div class="field has-addons">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="amount" placeholder="µAlgos"
+                      onchange="updateMicroAlgoConverter(this.value);">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-coins"></i>
+                    </div>
+                  </div>
+                  <p class="control">
+                    <a class="button is-static" id="microToAlgo">
+                      0 Algos
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Note</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" id="note" placeholder="(optional)">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-sticky-note"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="button is-dark is-fullwidth" id="signsend">Sign and Send</button>
+          </div>
+        </div>
+      </div>
+  </section>
+  <script>
+    window.addEventListener("load", function () {
+      checkForAlgosigner();
+    });
 
-        function connect() {
-            let elementOfConcern = document.getElementById('connect-code');
+    function checkForAlgosigner() {
+      if (typeof AlgoSigner !== 'undefined') {
+        document.getElementById('divCheck').classList.add("is-hidden");
+        document.getElementById('divTransaction').classList.remove("is-hidden");
+      } else {
+        document.getElementById('divCheck').classList.remove("is-hidden");
+        document.getElementById('refreshaccounts').classList.add("is-hidden");
+      };
+    }
 
-            AlgoSigner.connect()
-                .then((d) => {
-                    elementOfConcern.innerHTML = JSON.stringify(d);
-                })
-                .catch((e) => {
-                    console.error(e);
-                    elementOfConcern.innerHTML = JSON.stringify(e);
-                });
-        }
+    function refreshAccounts() {
+      algo_connect()
+        .then(algo_accounts)
+        .then((acctData) => populateAccounts(acctData))
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+        });
+    }
 
-        function accounts() {
-            let elementOfConcern = document.getElementById('accounts-code');
+    function signAndSendTransaction() {
+      let from = document.getElementById('from').value;
+      let to = document.getElementById('to').value;
+      let amount = document.getElementById('amount').value;
+      let note = document.getElementById('note').value;
 
-            AlgoSigner.accounts({
-                    ledger: 'TestNet'
-                })
-                .then((d) => {
-                    elementOfConcern.innerHTML = JSON.stringify(d);
-                })
-                .catch((e) => {
-                    console.error(e);
-                    elementOfConcern.innerHTML = JSON.stringify(e);
-                });
-        }
+      algo_params()
+        .then((txParams) => algo_sign(from, to, amount, note, txParams))
+        .then((signedTx) => algo_send(signedTx))
+        .then(() => {
+          // was successful
+          document.getElementById('successDialog').classList.remove("is-hidden");
+        })
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+        });
+    }
 
-        function status() {
-            let elementOfConcern = document.getElementById('status-code');
+    function populateAccounts(accountData) {
+      let accountsFromDropdown = document.getElementById('from');
+      let accountsToDropdown = document.getElementById('to');
 
-            AlgoSigner.algod({
-                    ledger: 'TestNet',
-                    path: '/v2/status'
-                })
-                .then((d) => {
-                    elementOfConcern.innerHTML = JSON.stringify(d);
-                })
-                .catch((e) => {
-                    console.error(e);
-                    elementOfConcern.innerHTML = JSON.stringify(e);
-                });
-        }
+      // append accounts to account dropdowns
+      accountsFromDropdown.textContent = '';
+      for (var i = accountData.length - 1; i >= 0; i--) {
+        let option = document.createElement('option');
+        option.text = accountData[i].address;
+        option.value = accountData[i].address;
+        accountsFromDropdown.appendChild(option);
+      }
 
-        function assets() {
-            let elementOfConcern = document.getElementById('assets-code');
+      accountsToDropdown.textContent = '';
+      for (var i = accountData.length - 1; i >= 0; i--) {
+        let option = document.createElement('option');
+        option.text = accountData[i].address;
+        option.value = accountData[i].address;
+        accountsToDropdown.appendChild(option);
+      }
 
-            const name = document.getElementById('name').value;
-            const limit = 1;
+      document.getElementById('divTransaction').classList.remove("is-hidden");
+    }
 
-            AlgoSigner.indexer({
-                    ledger: 'TestNet',
-                    path: `/v2/assets?name=${name}&limit=${limit}`,
-                })
-                .then((d) => {
-                    elementOfConcern.innerHTML = JSON.stringify(d);
-                })
-                .catch((e) => {
-                    console.error(e);
-                    elementOfConcern.innerHTML = JSON.stringify(e);
-                });
-        }
+    function algo_connect() {
+      return AlgoSigner.connect();
+    }
 
-        document.getElementById('check').addEventListener('click', check);
-        document.getElementById('connect').addEventListener('click', connect);
-        document.getElementById('accounts').addEventListener('click', accounts);
-        document.getElementById('status').addEventListener('click', status);
-        document.getElementById('assets').addEventListener('click', assets);
-    </script>
+    function algo_accounts() {
+      return AlgoSigner.accounts({
+        ledger: 'TestNet'
+      });
+    }
+
+    function algo_sign(from, to, amount, note, txParams) {
+      return AlgoSigner.sign({
+        from: from,
+        to: to,
+        amount: +amount,
+        note: note,
+        type: 'pay',
+        fee: txParams['min-fee'],
+        firstRound: txParams['last-round'],
+        lastRound: txParams['last-round'] + 1000,
+        genesisID: txParams['genesis-id'],
+        genesisHash: txParams['genesis-hash'],
+        flatFee: true
+      });
+    }
+
+    function algo_send(signedTx) {
+      return AlgoSigner.send({
+        ledger: 'TestNet',
+        tx: signedTx.blob
+      });
+    }
+
+    function algo_params() {
+      return AlgoSigner.algod({
+        ledger: 'TestNet',
+        path: '/v2/transactions/params'
+      });
+    }
+
+    function updateMicroAlgoConverter(microAlgoValue) {
+      document.getElementById('microToAlgo').innerHTML = microAlgosToAlgos(microAlgoValue) + " Algos";
+    }
+
+    function microAlgosToAlgos(numMicroAlgos) {
+      return (numMicroAlgos / 1000000).toFixed(6);
+    }
+
+    document.getElementById('refreshaccounts').addEventListener('click', refreshAccounts);
+    document.getElementById('signsend').addEventListener('click', signAndSendTransaction);
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Get all "navbar-burger" elements
+      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+      // Check if there are any navbar burgers
+      if ($navbarBurgers.length > 0) {
+
+        // Add a click event on each of them
+        $navbarBurgers.forEach(el => {
+          el.addEventListener('click', () => {
+
+            // Get the target from the "data-target" attribute
+            const target = el.dataset.target;
+            const $target = document.getElementById(target);
+
+            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+            el.classList.toggle('is-active');
+            $target.classList.toggle('is-active');
+
+          });
+        });
+      }
+    });
+
+    var closeButtonElements = document.getElementsByClassName('delete');
+
+    for (var i = 0; i < closeButtonElements.length; i++) {
+      closeButtonElements[i].addEventListener('click', (e) => {
+        e.target.parentElement.parentElement.classList.add('is-hidden');
+      });
+    }
+    
+  </script>
+  <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </body>
+
+</html>
