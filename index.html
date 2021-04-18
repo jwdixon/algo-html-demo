@@ -15,7 +15,7 @@
   <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <a class="navbar-item" href="https://algorand.com">
-        <img src="algorand_logo_mark_black.svg" style="height:100px;">
+        <img src="static/img/algorand_logo_mark_black.svg" style="height:100px;">
       </a>
 
       <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="algoDemoNavbar">
@@ -26,7 +26,7 @@
     </div>
     <div id="algoDemoNavbar" class="navbar-menu">
       <div class="navbar-start">
-        <a class="navbar-item">
+        <a class="navbar-item" href="index.html">
           Introduction
         </a>
 
@@ -36,16 +36,16 @@
           </a>
 
           <div class="navbar-dropdown">
-            <a class="navbar-item">
+            <a class="navbar-item" href="algo-transfer.html">
               ALGO Transfer
             </a>
-            <a class="navbar-item">
+            <a class="navbar-item" href="asa-transfer.html">
               ASA Transfer
             </a>
-            <a class="navbar-item">
+            <a class="navbar-item" href="asset-creation.html">
               Asset Creation
             </a>
-            <a class="navbar-item">
+            <a class="navbar-item" href="atomic-transfer.html">
               Atomic Transfer
             </a>
           </div>
@@ -57,13 +57,13 @@
           </a>
 
           <div class="navbar-dropdown">
-            <a class="navbar-item">
+            <a class="navbar-item" href="limit-order.html">
               Limit Order Contract
             </a>
-            <a class="navbar-item">
+            <a class="navbar-item" href="hash-time-lock.html">
               Hash Time Lock Contract
             </a>
-            <a class="navbar-item">
+            <a class="navbar-item" href="split-contract.html">
               Split Contract
             </a>
           </div>
@@ -81,252 +81,18 @@
           </div>
         </div>
       </div>
-      <div class="navbar-end">
-        <div class="navbar-item">
-          <button class="button is-info" id="refreshaccounts">Refresh Accounts</button>
-        </div>
-      </div>
     </div>
   </nav>
 
   <section class="section">
     <div class="container">
-      <article id="successDialog" class="message is-success is-hidden">
-        <div class="message-header">
-          <p>Success</p>
-          <button class="delete" aria-label="delete"></button>
-        </div>
-        <div class="message-body">
-          Your transaction was successfully sent.
-        </div>
-      </article>
-      <article id="errorDialog" class="message is-danger is-hidden">
-        <div class="message-header">
-          <p>Error</p>
-          <button class="delete" aria-label="delete"></button>
-        </div>
-        <div class="message-body">
-          An error occurred: <span id="errorMessage"></span>
-        </div>
-      </article>
+      <h1 class="title">Welcome!</h1>
 
-      <div id="divCheck" class="is-hidden">
-        <h1 class="title">AlgoSigner not installed!</h1>
-        <p class="subtitle">
-          You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
-        </p>
-      </div>
-
-      <div id="divTransaction" class="is-hidden">
-        <h1 class="title">Algo Transfer</h1>
-
-        <p class="subtitle">
-          If you don't have any Algos to test with, use the TestNet Faucet in the Tools menu to add Algos to your
-          TestNet account.
-        </p>
-
-        <div class="columns">
-          <div class="column">
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">From</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <div class="select is-fullwidth">
-                      <select id="from">
-                        <option>No accounts available</option>
-                      </select>
-                    </div>
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-wallet"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">To</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <div class="select is-fullwidth">
-                      <select id="to">
-                        <option>No accounts available</option>
-                      </select>
-                    </div>
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-wallet"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Amount</label>
-              </div>
-              <div class="field-body">
-                <div class="field has-addons">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="amount" placeholder="µAlgos"
-                      onchange="updateMicroAlgoConverter(this.value);">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-coins"></i>
-                    </div>
-                  </div>
-                  <p class="control">
-                    <a class="button is-static" id="microToAlgo">
-                      0 Algos
-                    </a>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Note</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="note" placeholder="(optional)">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-sticky-note"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <button class="button is-dark is-fullwidth" id="signsend">Sign and Send</button>
-          </div>
-        </div>
-      </div>
+      <p class="subtitle">
+        Welcome to the Algorand Smart Contract demo!
+      </p>
+    </div>
   </section>
-  <script>
-    window.addEventListener("load", function () {
-      checkForAlgosigner();
-    });
-
-    function checkForAlgosigner() {
-      if (typeof AlgoSigner !== 'undefined') {
-        document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('divTransaction').classList.remove("is-hidden");
-      } else {
-        document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('refreshaccounts').classList.add("is-hidden");
-      };
-    }
-
-    function refreshAccounts() {
-      algo_connect()
-        .then(algo_accounts)
-        .then((acctData) => populateAccounts(acctData))
-        .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
-        });
-    }
-
-    function signAndSendTransaction() {
-      let from = document.getElementById('from').value;
-      let to = document.getElementById('to').value;
-      let amount = document.getElementById('amount').value;
-      let note = document.getElementById('note').value;
-
-      algo_params()
-        .then((txParams) => algo_sign(from, to, amount, note, txParams))
-        .then((signedTx) => algo_send(signedTx))
-        .then(() => {
-          // was successful
-          document.getElementById('successDialog').classList.remove("is-hidden");
-        })
-        .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
-        });
-    }
-
-    function populateAccounts(accountData) {
-      let accountsFromDropdown = document.getElementById('from');
-      let accountsToDropdown = document.getElementById('to');
-
-      // append accounts to account dropdowns
-      accountsFromDropdown.textContent = '';
-      for (var i = accountData.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = accountData[i].address;
-        option.value = accountData[i].address;
-        accountsFromDropdown.appendChild(option);
-      }
-
-      accountsToDropdown.textContent = '';
-      for (var i = accountData.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = accountData[i].address;
-        option.value = accountData[i].address;
-        accountsToDropdown.appendChild(option);
-      }
-
-      document.getElementById('divTransaction').classList.remove("is-hidden");
-    }
-
-    function algo_connect() {
-      return AlgoSigner.connect();
-    }
-
-    function algo_accounts() {
-      return AlgoSigner.accounts({
-        ledger: 'TestNet'
-      });
-    }
-
-    function algo_sign(from, to, amount, note, txParams) {
-      return AlgoSigner.sign({
-        from: from,
-        to: to,
-        amount: +amount,
-        note: note,
-        type: 'pay',
-        fee: txParams['min-fee'],
-        firstRound: txParams['last-round'],
-        lastRound: txParams['last-round'] + 1000,
-        genesisID: txParams['genesis-id'],
-        genesisHash: txParams['genesis-hash'],
-        flatFee: true
-      });
-    }
-
-    function algo_send(signedTx) {
-      return AlgoSigner.send({
-        ledger: 'TestNet',
-        tx: signedTx.blob
-      });
-    }
-
-    function algo_params() {
-      return AlgoSigner.algod({
-        ledger: 'TestNet',
-        path: '/v2/transactions/params'
-      });
-    }
-
-    function updateMicroAlgoConverter(microAlgoValue) {
-      document.getElementById('microToAlgo').innerHTML = microAlgosToAlgos(microAlgoValue) + " Algos";
-    }
-
-    function microAlgosToAlgos(numMicroAlgos) {
-      return (numMicroAlgos / 1000000).toFixed(6);
-    }
-
-    document.getElementById('refreshaccounts').addEventListener('click', refreshAccounts);
-    document.getElementById('signsend').addEventListener('click', signAndSendTransaction);
-  </script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -352,15 +118,6 @@
         });
       }
     });
-
-    var closeButtonElements = document.getElementsByClassName('delete');
-
-    for (var i = 0; i < closeButtonElements.length; i++) {
-      closeButtonElements[i].addEventListener('click', (e) => {
-        e.target.parentElement.parentElement.classList.add('is-hidden');
-      });
-    }
-    
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </body>
