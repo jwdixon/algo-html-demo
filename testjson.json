@@ -1,0 +1,78 @@
+{
+  "address": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+  "amount": 8973262,
+  "amount-without-pending-rewards": 8973246,
+  "apps-local-state": [],
+  "apps-total-schema": {
+    "num-byte-slice": 0,
+    "num-uint": 0
+  },
+  "assets": [{
+    "amount": 100000000,
+    "asset-id": 15378466,
+    "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+    "is-frozen": false
+  }, {
+    "amount": 100000000,
+    "asset-id": 15378511,
+    "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+    "is-frozen": false
+  }, {
+    "amount": 100000000,
+    "asset-id": 15378528,
+    "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+    "is-frozen": false
+  }, {
+    "amount": 100000000,
+    "asset-id": 15378615,
+    "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+    "is-frozen": false
+  }],
+  "created-apps": [],
+  "created-assets": [{
+    "index": 15378615,
+    "params": {
+      "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+      "decimals": 0,
+      "default-frozen": false,
+      "name": "CarlCoin",
+      "total": 100000000,
+      "unit-name": "CARL"
+    }
+  }, {
+    "index": 15378466,
+    "params": {
+      "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+      "decimals": 1,
+      "default-frozen": false,
+      "name": "WildCoin",
+      "total": 100000000,
+      "unit-name": "WILD"
+    }
+  }, {
+    "index": 15378511,
+    "params": {
+      "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+      "decimals": 0,
+      "default-frozen": false,
+      "name": "WeirdCoin",
+      "total": 100000000,
+      "unit-name": "WEIRD"
+    }
+  }, {
+    "index": 15378528,
+    "params": {
+      "creator": "6HE7K4J3Y4MFTMD4POZDCBUMRDJRFRSAP2IUTOHCCSHX3LNZQKOTYWSE2E",
+      "decimals": 0,
+      "default-frozen": false,
+      "name": "WeirdCoin",
+      "total": 100000000,
+      "unit-name": "WEIRD"
+    }
+  }],
+  "pending-rewards": 16,
+  "reward-base": 26778,
+  "rewards": 262,
+  "round": 13625190,
+  "status": "Offline"
+}
