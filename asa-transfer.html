@@ -133,7 +133,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <div class="select is-fullwidth" onchange="retrieveAssets(this.value);">
+                    <div class="select is-fullwidth" onchange="fetchAssets();">
                       <select id="from">
                         <option>No accounts available</option>
                       </select>
@@ -221,8 +221,6 @@
                 <button class="button is-dark is-fullwidth" id="signsend">Sign and Send</button>
               </div>
             </div>
-            
-            
           </div>
         </div>
       </div>
@@ -242,12 +240,17 @@
       };
     }
 
-    function refreshAccounts() {
-      let acctData = [];
+    function fetchAccounts() {
+      renderLoadingSelect(document.getElementById('from'));
+      renderLoadingSelect(document.getElementById('to'));
 
       algo_connect()
         .then(algo_accounts)
-        .then((acctData) => populateAccounts(acctData))
+        .then((acctData) => {
+          renderAccountSelect(document.getElementById('to'), acctData);
+          renderAccountSelect(document.getElementById('from'), acctData);
+        })
+        .then(fetchAssets)
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
@@ -255,10 +258,25 @@
         });
     }
 
-    function retrieveAssets() {
+    function fetchAssets() {
       let accounts = document.getElementById('from');
+      let assetDropdown = document.getElementById('asset');
+
+      renderLoadingSelect(document.getElementById('asset'));
+
+      let assetData = [];
+
       algo_account(accounts.value)
-      .then((accountData) => populateAssets(accountData.assets))
+      .then((accountData) => {
+        return accountData.assets.reduce(
+          (promise, asset) => promise.then(() => 
+          algo_asset(asset['asset-id'])
+            .then((d) => assetData.push(d)
+            )
+          ),
+        Promise.resolve());
+      })
+      .then(() => renderAssetSelect(assetDropdown, assetData))
       .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
@@ -309,48 +327,29 @@
         });
     }
 
-    function populateAssets(assetsData) {
-      let assetDropdown = document.getElementById('asset');
+    function renderAssetSelect(elem, data) {
+      elem.length = 0;
 
-      let assetIdList = assetsData.map(function(item) {
-        return item['asset-id'];
-      });
-
-      // append assets to asset dropdown
-      assetDropdown.textContent = '';
-      for (var i = assetIdList.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = assetsData[i]['asset-id'];
-        option.value = assetsData[i]['asset-id'];
-        assetDropdown.appendChild(option);
+      // append assets
+      for (var i = data.length - 1; i >= 0; i--) {
+        appendSelectOption(elem,
+                            data[i]['asset']['params']['name'],
+                            data[i]['asset']['index']);
       }
     }
 
-    function populateAccounts(accountData) {
-      let accountsFromDropdown = document.getElementById('from');
-      let accountsToDropdown = document.getElementById('to');
+    function renderAccountSelect(elem, data) {
+      elem.length = 0;
 
-      // append accounts to account dropdowns
-      accountsFromDropdown.textContent = '';
-      for (var i = accountData.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = accountData[i].address;
-        option.value = accountData[i].address;
-        accountsFromDropdown.appendChild(option);
+      // append accounts
+      for (var i = data.length - 1; i >= 0; i--) {
+        appendSelectOption(elem,
+                            data[i].address,
+                            data[i].address);
       }
-
-      accountsToDropdown.textContent = '';
-      for (var i = accountData.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = accountData[i].address;
-        option.value = accountData[i].address;
-        accountsToDropdown.appendChild(option);
-      }
-
-      document.getElementById('divTransaction').classList.remove("is-hidden");
     }
 
-    document.getElementById('refreshaccounts').addEventListener('click', refreshAccounts);
+    document.getElementById('refreshaccounts').addEventListener('click', fetchAccounts);
     document.getElementById('signsend').addEventListener('click', signAndSendTransaction);
     document.getElementById('optin').addEventListener('click', signAndSendOptIn);
   </script>
@@ -390,6 +389,7 @@
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/algowrapper.js"></script>
+  <script src="static/js/site.js"></script>
 </body>
 
 </html>

@@ -221,10 +221,16 @@
       };
     }
 
-    function refreshAccounts() {
+    function fetchAccounts() {
+      renderLoadingSelect(document.getElementById('from'));
+      renderLoadingSelect(document.getElementById('to'));
+
       algo_connect()
         .then(algo_accounts)
-        .then((acctData) => populateAccounts(acctData))
+        .then((acctData) => {
+          renderAccountSelect(document.getElementById('to'), acctData);
+          renderAccountSelect(document.getElementById('from'), acctData);
+        })
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
@@ -253,31 +259,18 @@
         });
     }
 
-    function populateAccounts(accountData) {
-      let accountsFromDropdown = document.getElementById('from');
-      let accountsToDropdown = document.getElementById('to');
+    function renderAccountSelect(elem, data) {
+      elem.length = 0;
 
-      // append accounts to account dropdowns
-      accountsFromDropdown.textContent = '';
-      for (var i = accountData.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = accountData[i].address;
-        option.value = accountData[i].address;
-        accountsFromDropdown.appendChild(option);
+      // append accounts
+      for (var i = data.length - 1; i >= 0; i--) {
+        appendSelectOption(elem,
+                            data[i].address,
+                            data[i].address);
       }
-
-      accountsToDropdown.textContent = '';
-      for (var i = accountData.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = accountData[i].address;
-        option.value = accountData[i].address;
-        accountsToDropdown.appendChild(option);
-      }
-
-      document.getElementById('divTransaction').classList.remove("is-hidden");
     }
 
-    document.getElementById('refreshaccounts').addEventListener('click', refreshAccounts);
+    document.getElementById('refreshaccounts').addEventListener('click', fetchAccounts);
     document.getElementById('signsend').addEventListener('click', signAndSendTransaction);
   </script>
   <script>
@@ -317,6 +310,7 @@
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/algowrapper.js"></script>
+  <script src="static/js/site.js"></script>
 </body>
 
 </html>

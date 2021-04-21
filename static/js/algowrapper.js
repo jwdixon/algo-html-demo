@@ -13,14 +13,14 @@ function algo_accounts() {
 function algo_account(account) {
   return AlgoSigner.algod({
     ledger: 'TestNet',
-    path: '/v2/accounts/' + account
+    path: `/v2/accounts/${account}`
   });
 }
 
 function algo_asset(asset) {
-  return AlgoSigner.algod({
+  return AlgoSigner.indexer({
     ledger: 'TestNet',
-    path: '/v2/assets/' + asset
+    path: `/v2/assets/${asset}`
   });
 }
 
@@ -106,7 +106,7 @@ function algo_assetoptin_sign(assetId, from, to, txParams) {
 }
 
 function updateMicroAlgoConverter(microAlgoValue) {
-  document.getElementById('microToAlgo').innerHTML = microAlgosToAlgos(microAlgoValue) + " Algos";
+  document.getElementById('microToAlgo').innerHTML = `${microAlgosToAlgos(microAlgoValue)} Algos`;
 }
 
 function microAlgosToAlgos(numMicroAlgos) {
