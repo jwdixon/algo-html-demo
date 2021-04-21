@@ -133,7 +133,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <div class="select is-fullwidth" onchange="fetchAssets();">
+                    <div class="select is-fullwidth">
                       <select id="from">
                         <option>No accounts available</option>
                       </select>
@@ -213,14 +213,14 @@
                 </div>
               </div>
             </div>
-            <div class="columns">
-              <div class="column">
-                <button class="button is-dark is-fullwidth" id="btnOptIn">Opt-in Recipient</button>
-              </div>
-              <div class="column">
-                <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
-              </div>
-            </div>
+          </div>
+        </div>
+        <div class="columns">
+          <div class="column">
+            <button class="button is-dark is-fullwidth" id="btnOptIn">Opt-in Recipient</button>
+          </div>
+          <div class="column">
+            <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
           </div>
         </div>
       </div>
@@ -241,16 +241,22 @@
     }
 
     function fetchAccounts() {
-      renderLoadingSelect(document.getElementById('from'));
-      renderLoadingSelect(document.getElementById('to'));
+      let selFrom = document.getElementById('from');
+      let selTo = document.getElementById('to');
+      let selAsset = document.getElementById('asset');
 
-      algo_connect()
+      renderLoadingSelect(selFrom);
+      renderLoadingSelect(selTo);
+      renderLoadingSelect(selAsset);
+
+      return algo_connect()
         .then(algo_accounts)
         .then((acctData) => {
-          renderAccountSelect(document.getElementById('to'), acctData);
-          renderAccountSelect(document.getElementById('from'), acctData);
+          renderAccountSelect(selFrom, acctData);
+          renderAccountSelect(selTo, acctData);
         })
-        .then(fetchAssets)
+        .then(() => fetchAssets(selFrom.value))
+        .then((assetData) => renderAssetSelect(selAsset, assetData))
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
@@ -258,15 +264,10 @@
         });
     }
 
-    function fetchAssets() {
-      let accounts = document.getElementById('from');
-      let assetDropdown = document.getElementById('asset');
-
-      renderLoadingSelect(document.getElementById('asset'));
-
+    function fetchAssets(account) {
       let assetData = [];
 
-      algo_account(accounts.value)
+      return algo_account(account)
       .then((accountData) => {
         return accountData.assets.reduce(
           (promise, asset) => promise.then(() => 
@@ -276,7 +277,7 @@
           ),
         Promise.resolve());
       })
-      .then(() => renderAssetSelect(assetDropdown, assetData))
+      .then(() => assetData)
       .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
@@ -348,6 +349,14 @@
                             data[i].address);
       }
     }
+
+    document.getElementById('from').addEventListener('change', function() {
+      let selAsset = document.getElementById('asset');
+
+      renderLoadingSelect(selAsset);
+      fetchAssets(this.value)
+        .then((assetData) => renderAssetSelect(selAsset, assetData))
+    });
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);

@@ -73,7 +73,11 @@ function algo_assetcreation_sign(from, assetName, assetUnitName, assetTotal, ass
 }
 
 function algo_assettransfer_sign(assetId, from, amount, to, note, txParams) {
-  return AlgoSigner.sign({
+  return AlgoSigner.sign(algo_assettransfer_xn(assetId, from, amount, to, note, txParams));
+}
+
+function algo_assettransfer_xn(assetId, from, amount, to, note, txParams) {
+  return {
     assetIndex: assetId,
     from: from,
     amount: +amount,
@@ -86,7 +90,7 @@ function algo_assettransfer_sign(assetId, from, amount, to, note, txParams) {
     genesisID: txParams['genesis-id'],
     genesisHash: txParams['genesis-hash'],
     flatFee: true
-  });
+  };
 }
 
 function algo_assetoptin_sign(assetId, from, to, txParams) {
