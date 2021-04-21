@@ -83,7 +83,7 @@
       </div>
       <div class="navbar-end">
         <div class="navbar-item">
-          <button class="button is-info" id="refreshaccounts">Refresh Accounts</button>
+          <button class="button is-info" id="btnRefreshAccounts">Refresh Accounts</button>
         </div>
       </div>
     </div>
@@ -215,10 +215,10 @@
             </div>
             <div class="columns">
               <div class="column">
-                <button class="button is-dark is-fullwidth" id="optin">Opt-in Recipient</button>
+                <button class="button is-dark is-fullwidth" id="btnOptIn">Opt-in Recipient</button>
               </div>
               <div class="column">
-                <button class="button is-dark is-fullwidth" id="signsend">Sign and Send</button>
+                <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
               </div>
             </div>
           </div>
@@ -236,7 +236,7 @@
         document.getElementById('divTransaction').classList.remove("is-hidden");
       } else {
         document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('refreshaccounts').classList.add("is-hidden");
+        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
       };
     }
 
@@ -349,9 +349,9 @@
       }
     }
 
-    document.getElementById('refreshaccounts').addEventListener('click', fetchAccounts);
-    document.getElementById('signsend').addEventListener('click', signAndSendTransaction);
-    document.getElementById('optin').addEventListener('click', signAndSendOptIn);
+    document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
+    document.getElementById('btnOptIn').addEventListener('click', signAndSendOptIn);
   </script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
