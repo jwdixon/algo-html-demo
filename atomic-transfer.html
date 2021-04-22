@@ -327,24 +327,27 @@
     }
 
     function fetchAssets(account) {
-      let assetData = [];
+      if (account != -1) {
+        let assetData = [];
 
-      return algo_account(account)
-      .then((accountData) => {
-        return accountData.assets.reduce(
-          (promise, asset) => promise.then(() => 
-          algo_asset(asset['asset-id'])
-            .then((d) => assetData.push(d)
-            )
-          ),
-        Promise.resolve());
-      })
-      .then(() => assetData)
-      .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
-        });
+        return algo_account(account)
+          .then((accountData) => {
+            return accountData.assets.reduce(
+              (promise, asset) => promise.then(() =>
+                algo_asset(asset['asset-id'])
+                .then((d) => assetData.push(d))
+              ),
+              Promise.resolve());
+          })
+          .then(() => assetData)
+          .catch((e) => {
+            console.error(e);
+            document.getElementById('errorMessage').innerHTML = e.message;
+            document.getElementById('errorDialog').classList.remove("is-hidden");
+          });
+      } else {
+        return [];
+      }
     }
 
     function tradeAssets() {
@@ -353,7 +356,7 @@
       let signedTx1 = {};
       let signedTx2 = {};
       let txGroup = [];
-      
+
       algo_params()
         .then((txParams) => {
           let assetId = Number(document.getElementById('asset_left').value);
@@ -412,7 +415,7 @@
           const decoded_2 = new Uint8Array(atob(signedTx2.blob).split("").map(x => x.charCodeAt(0)));
 
           // Use their combined length to create a 3rd array
-          let combined_decoded_txns = new Uint8Array(decoded_1.byteLength + decoded_2.byteLength); 
+          let combined_decoded_txns = new Uint8Array(decoded_1.byteLength + decoded_2.byteLength);
 
           // Starting at the 0 position, fill in the binary for the first object
           combined_decoded_txns.set(new Uint8Array(decoded_1), 0);
@@ -440,29 +443,7 @@
         });
     }
 
-    function renderAssetSelect(elem, data) {
-      elem.length = 0;
-
-      // append assets
-      for (var i = data.length - 1; i >= 0; i--) {
-        appendSelectOption(elem,
-                            data[i]['asset']['params']['name'],
-                            data[i]['asset']['index']);
-      }
-    }
-
-    function renderAccountSelect(elem, data) {
-      elem.length = 0;
-
-      // append accounts
-      for (var i = data.length - 1; i >= 0; i--) {
-        appendSelectOption(elem,
-                            data[i].address,
-                            data[i].address);
-      }
-    }
-
-    document.getElementById('from_left').addEventListener('change', function() {
+    document.getElementById('from_left').addEventListener('change', function () {
       let selAssetLeft = document.getElementById('asset_left');
 
       renderLoadingSelect(selAssetLeft);
@@ -470,7 +451,7 @@
         .then((assetData) => renderAssetSelect(selAssetLeft, assetData))
     });
 
-    document.getElementById('from_right').addEventListener('change', function() {
+    document.getElementById('from_right').addEventListener('change', function () {
       let selAssetRight = document.getElementById('asset_right');
 
       renderLoadingSelect(selAssetRight);

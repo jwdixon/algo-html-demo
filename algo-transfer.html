@@ -259,17 +259,6 @@
         });
     }
 
-    function renderAccountSelect(elem, data) {
-      elem.length = 0;
-
-      // append accounts
-      for (var i = data.length - 1; i >= 0; i--) {
-        appendSelectOption(elem,
-                            data[i].address,
-                            data[i].address);
-      }
-    }
-
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
   </script>

@@ -83,7 +83,7 @@
       </div>
       <div class="navbar-end">
         <div class="navbar-item">
-          <button class="button is-info" id="refreshaccounts">Refresh Accounts</button>
+          <button class="button is-info" id="btnRefreshAccounts">Refresh Accounts</button>
         </div>
       </div>
     </div>
@@ -222,7 +222,7 @@
             </div>
           </div>
         </div>
-        <button class="button is-dark is-fullwidth" id="signsend">Sign and Send</button>
+        <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
       </div>
   </section>
   <script>
@@ -236,14 +236,18 @@
         document.getElementById('divCreateAsset').classList.remove("is-hidden");
       } else {
         document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('refreshaccounts').classList.add("is-hidden");
+        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
       };
     }
 
-    function refreshAccounts() {
+    function fetchAccounts() {
+      let selFrom = document.getElementById('from');
+
       algo_connect()
         .then(algo_accounts)
-        .then((acctData) => populateAccounts(acctData))
+        .then((acctData) => {
+          renderAccountSelect(selFrom, acctData);
+        })
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
@@ -275,23 +279,8 @@
         });
     }
 
-    function populateAccounts(accountData) {
-      let accountsFromDropdown = document.getElementById('from');
-
-      // append accounts to account dropdown
-      accountsFromDropdown.textContent = '';
-      for (var i = accountData.length - 1; i >= 0; i--) {
-        let option = document.createElement('option');
-        option.text = accountData[i].address;
-        option.value = accountData[i].address;
-        accountsFromDropdown.appendChild(option);
-      }
-
-      document.getElementById('divCreateAsset').classList.remove("is-hidden");
-    }
-
-    document.getElementById('refreshaccounts').addEventListener('click', refreshAccounts);
-    document.getElementById('signsend').addEventListener('click', signAndSendTransaction);
+    document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
   </script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -330,6 +319,7 @@
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/algowrapper.js"></script>
+  <script src="static/js/site.js"></script>
 </body>
 
 </html>
