@@ -198,21 +198,6 @@
                 </div>
               </div>
             </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Note</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="note_left" placeholder="(optional)">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-sticky-note"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
           <div class="column">
             <div class="field is-horizontal">
@@ -282,21 +267,6 @@
                     </div>
                     <div class="icon is-small is-left">
                       <i class="fas fa-wallet"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Note</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="note_right" placeholder="(optional)">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-sticky-note"></i>
                     </div>
                   </div>
                 </div>
@@ -378,36 +348,96 @@
     }
 
     function tradeAssets() {
-      /*
-      let assetId = Number(document.getElementById('asset_left').value);
-      let from = document.getElementById('from_left').value;
-      let amount = document.getElementById('amount_left').value;
-      let to = document.getElementById('to_left').value;
-      let note = document.getElementById('note_left').value;
-
-      let tx1 = algo_assettransfer_xn(assetId, from, amount, to, note, txParams);
-
-      assetId = Number(document.getElementById('asset_right').value);
-      from = document.getElementById('from_right').value;
-      amount = document.getElementById('amount_right').value;
-      to = document.getElementById('to_right').value;
-      note = document.getElementById('note_right').value;
+      let tx1 = {};
+      let tx2 = {};
+      let signedTx1 = {};
+      let signedTx2 = {};
+      let txGroup = [];
       
-      let tx2 = algo_assettransfer_xn(assetId, from, amount, to, note, txParams);
-
-      let txGroup = await algosdk.assignGroupID([
-        tx1, tx2
-      ]);
-
       algo_params()
-        .then((d) => txParams = d)
+        .then((txParams) => {
+          let assetId = Number(document.getElementById('asset_left').value);
+          let from = document.getElementById('from_left').value;
+          let amount = document.getElementById('amount_left').value;
+          let to = document.getElementById('to_left').value;
+
+          tx1 = {
+            assetIndex: assetId,
+            from: from,
+            amount: +amount,
+            to: to,
+            type: 'axfer',
+            fee: txParams['min-fee'],
+            firstRound: txParams['last-round'],
+            lastRound: txParams['last-round'] + 1000,
+            genesisID: txParams['genesis-id'],
+            genesisHash: txParams['genesis-hash'],
+            flatFee: true
+          };
+
+          assetId = Number(document.getElementById('asset_right').value);
+          from = document.getElementById('from_right').value;
+          amount = document.getElementById('amount_right').value;
+          to = document.getElementById('to_right').value;
+
+          tx2 = {
+            assetIndex: assetId,
+            from: from,
+            amount: +amount,
+            to: to,
+            type: 'axfer',
+            fee: txParams['min-fee'],
+            firstRound: txParams['last-round'],
+            lastRound: txParams['last-round'] + 1000,
+            genesisID: txParams['genesis-id'],
+            genesisHash: txParams['genesis-hash'],
+            flatFee: true
+          };
+
+          return algosdk.assignGroupID([tx1, tx2]);
+        })
+        .then((d) => {
+          txGroup = d;
+          // Modify the group fields in orginal transactions to be base64 encoded strings
+          tx1.group = txGroup[0].group.toString('base64');
+          tx2.group = txGroup[1].group.toString('base64');
+        })
+        .then(() => AlgoSigner.sign(tx1))
+        .then((d) => signedTx1 = d)
+        .then(() => AlgoSigner.sign(tx2))
+        .then((d) => signedTx2 = d)
+        .then(() => {
+          // Get the decoded binary Uint8Array values from the blobs
+          const decoded_1 = new Uint8Array(atob(signedTx1.blob).split("").map(x => x.charCodeAt(0)));
+          const decoded_2 = new Uint8Array(atob(signedTx2.blob).split("").map(x => x.charCodeAt(0)));
+
+          // Use their combined length to create a 3rd array
+          let combined_decoded_txns = new Uint8Array(decoded_1.byteLength + decoded_2.byteLength); 
+
+          // Starting at the 0 position, fill in the binary for the first object
+          combined_decoded_txns.set(new Uint8Array(decoded_1), 0);
+          // Starting at the first object byte length, fill in the 2nd binary value
+          combined_decoded_txns.set(new Uint8Array(decoded_2), decoded_1.byteLength);
+
+          // Modify our combined array values back to an encoded 64bit string
+          const grouped_txns = btoa(String.fromCharCode.apply(null, combined_decoded_txns));
+
+          return AlgoSigner.send({
+            ledger: 'TestNet',
+            tx: grouped_txns
+          });
+        })
+        .then((d) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+            " was successfully sent.";
+          document.getElementById('successDialog').classList.remove("is-hidden");
+        })
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
           document.getElementById('errorDialog').classList.remove("is-hidden");
         });
-
-*/
     }
 
     function renderAssetSelect(elem, data) {
