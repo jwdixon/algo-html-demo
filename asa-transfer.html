@@ -247,9 +247,12 @@
 
       renderLoadingSelect(selFrom);
       renderLoadingSelect(selTo);
+      renderLoadingSelect(selAsset);
 
-      return algo_connect()
-        .then(algo_accounts)
+      AlgoSigner.connect()
+        .then(() => AlgoSigner.accounts({
+          ledger: 'TestNet'
+        }))
         .then((acctData) => {
           renderAccountSelect(selFrom, acctData);
           renderAccountSelect(selTo, acctData);
@@ -267,11 +270,17 @@
       if (account != -1) {
         let assetData = [];
 
-        return algo_account(account)
+        return AlgoSigner.algod({
+            ledger: 'TestNet',
+            path: `/v2/accounts/${account}`
+          })
           .then((accountData) => {
             return accountData.assets.reduce(
               (promise, asset) => promise.then(() =>
-                algo_asset(asset['asset-id'])
+                AlgoSigner.indexer({
+                  ledger: 'TestNet',
+                  path: `/v2/assets/${asset['asset-id']}`
+                })
                 .then((d) => assetData.push(d))
               ),
               Promise.resolve());
@@ -291,9 +300,28 @@
       let assetId = Number(document.getElementById('asset').value);
       let optInAccount = document.getElementById('to').value;
 
-      algo_params()
-        .then((txParams) => algo_assetoptin_sign(assetId, optInAccount, optInAccount, txParams))
-        .then((signedTx) => algo_send(signedTx))
+      AlgoSigner.connect()
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        .then((txParams) => AlgoSigner.sign({
+          assetIndex: assetId,
+          from: optInAccount,
+          amount: 0,
+          to: optInAccount,
+          type: 'axfer',
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
         .then((d) => {
           // was successful
           document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
@@ -314,9 +342,29 @@
       let to = document.getElementById('to').value;
       let note = document.getElementById('note').value;
 
-      algo_params()
-        .then((txParams) => algo_assettransfer_sign(assetId, from, amount, to, note, txParams))
-        .then((signedTx) => algo_send(signedTx))
+      AlgoSigner.connect()
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        .then((txParams) => AlgoSigner.sign({
+          assetIndex: assetId,
+          from: from,
+          amount: +amount,
+          to: to,
+          note: note,
+          type: 'axfer',
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
         .then((d) => {
           // was successful
           document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
@@ -342,42 +390,7 @@
     document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
     document.getElementById('btnOptIn').addEventListener('click', signAndSendOptIn);
   </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-
-      // Get all "navbar-burger" elements
-      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-
-      // Check if there are any navbar burgers
-      if ($navbarBurgers.length > 0) {
-
-        // Add a click event on each of them
-        $navbarBurgers.forEach(el => {
-          el.addEventListener('click', () => {
-
-            // Get the target from the "data-target" attribute
-            const target = el.dataset.target;
-            const $target = document.getElementById(target);
-
-            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-            el.classList.toggle('is-active');
-            $target.classList.toggle('is-active');
-
-          });
-        });
-      }
-    });
-
-    var closeButtonElements = document.getElementsByClassName('delete');
-
-    for (var i = 0; i < closeButtonElements.length; i++) {
-      closeButtonElements[i].addEventListener('click', (e) => {
-        e.target.parentElement.parentElement.classList.add('is-hidden');
-      });
-    }
-  </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-  <script src="static/js/algowrapper.js"></script>
   <script src="static/js/site.js"></script>
 </body>
 

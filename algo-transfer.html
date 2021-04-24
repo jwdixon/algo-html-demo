@@ -54,7 +54,7 @@
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link">
             Smart Contracts
-          </a>                
+          </a>
 
           <div class="navbar-dropdown">
             <a class="navbar-item" href="limit-order.html">
@@ -225,8 +225,10 @@
       renderLoadingSelect(document.getElementById('from'));
       renderLoadingSelect(document.getElementById('to'));
 
-      algo_connect()
-        .then(algo_accounts)
+      AlgoSigner.connect()
+        .then(() => AlgoSigner.accounts({
+          ledger: 'TestNet'
+        }))
         .then((acctData) => {
           renderAccountSelect(document.getElementById('to'), acctData);
           renderAccountSelect(document.getElementById('from'), acctData);
@@ -244,12 +246,32 @@
       let amount = document.getElementById('amount').value;
       let note = document.getElementById('note').value;
 
-      algo_params()
-        .then((txParams) => algo_pay_sign(from, to, amount, note, txParams))
-        .then((signedTx) => algo_send(signedTx))
+      AlgoSigner.connect()
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        .then((txParams) => AlgoSigner.sign({
+          from: from,
+          to: to,
+          amount: +amount,
+          note: note,
+          type: 'pay',
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
         .then((d) => {
           // was successful
-          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] + " was successfully sent.";
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+            " was successfully sent.";
           document.getElementById('successDialog').classList.remove("is-hidden");
         })
         .catch((e) => {
@@ -259,46 +281,18 @@
         });
     }
 
+    function updateMicroAlgoConverter(microAlgoValue) {
+      document.getElementById('microToAlgo').innerHTML = `${microAlgosToAlgos(microAlgoValue)} Algos`;
+    }
+
+    function microAlgosToAlgos(numMicroAlgos) {
+      return (numMicroAlgos / 1000000).toFixed(6);
+    }
+
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
   </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-
-      // Get all "navbar-burger" elements
-      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-
-      // Check if there are any navbar burgers
-      if ($navbarBurgers.length > 0) {
-
-        // Add a click event on each of them
-        $navbarBurgers.forEach(el => {
-          el.addEventListener('click', () => {
-
-            // Get the target from the "data-target" attribute
-            const target = el.dataset.target;
-            const $target = document.getElementById(target);
-
-            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-            el.classList.toggle('is-active');
-            $target.classList.toggle('is-active');
-
-          });
-        });
-      }
-    });
-
-    var closeButtonElements = document.getElementsByClassName('delete');
-
-    for (var i = 0; i < closeButtonElements.length; i++) {
-      closeButtonElements[i].addEventListener('click', (e) => {
-        e.target.parentElement.parentElement.classList.add('is-hidden');
-      });
-    }
-    
-  </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-  <script src="static/js/algowrapper.js"></script>
   <script src="static/js/site.js"></script>
 </body>
 
