@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Limit Order - Algorand Features and Smart Contracts Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
+    integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
+    crossorigin="anonymous" />
+  <script src="static/js/algosdk.min.js"></script>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://algorand.com">
+        <img src="static/img/algorand_logo_mark_black.svg" style="height:100px;">
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="algoDemoNavbar">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="algoDemoNavbar" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="index.html">
+          Introduction
+        </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Transactions
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="algo-transfer.html">
+              ALGO Transfer
+            </a>
+            <a class="navbar-item" href="asa-transfer.html">
+              ASA Transfer
+            </a>
+            <a class="navbar-item" href="asset-creation.html">
+              Asset Creation
+            </a>
+            <a class="navbar-item" href="atomic-transfer.html">
+              Atomic Transfer
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Smart Contracts
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="limit-order.html">
+              Limit Order Contract
+            </a>
+            <a class="navbar-item" href="hash-time-lock.html">
+              Hash Time Lock Contract
+            </a>
+            <a class="navbar-item" href="split-contract.html">
+              Split Contract
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Tools
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item">
+              TestNet ALGO Faucet
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <button class="button is-info" id="btnRefreshAccounts">Refresh Accounts</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      <article id="successDialog" class="message is-success is-hidden">
+        <div class="message-header">
+          <p>Success</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          <span id="successMessage"></span>
+        </div>
+      </article>
+      <article id="errorDialog" class="message is-danger is-hidden">
+        <div class="message-header">
+          <p>Error</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          An error occurred: <span id="errorMessage"></span>
+        </div>
+      </article>
+
+      <div id="divCheck" class="is-hidden">
+        <h1 class="title">AlgoSigner not installed!</h1>
+        <p class="subtitle">
+          You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
+        </p>
+      </div>
+
+      <div id="divTransaction" class="is-hidden">
+        <h1 class="title">Limit Order - Bubblegum Demo</h1>
+
+        <p class="subtitle">
+          Pay 1 Algo, get 1 Bubblegum (BUBBLE). If you don't have any Algos to test with, use the TestNet Faucet in the
+          Tools menu to add Algos to your
+          TestNet account.
+        </p>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Payment Account</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="payacct">
+                        <option>No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
+      </div>
+  </section>
+  
+  <script type="module">
+    import { LimitOrder } from './static/js/algosdk.min.js'
+    window.addEventListener("load", function () {
+      checkForAlgosigner();
+    });
+
+    function checkForAlgosigner() {
+      if (typeof AlgoSigner !== 'undefined') {
+        document.getElementById('divCheck').classList.add("is-hidden");
+        document.getElementById('divTransaction').classList.remove("is-hidden");
+      } else {
+        document.getElementById('divCheck').classList.remove("is-hidden");
+        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
+      };
+    }
+
+    function fetchAccounts() {
+      renderLoadingSelect(document.getElementById('payacct'));
+
+      algo_connect()
+        .then(algo_accounts)
+        .then((acctData) => {
+          renderAccountSelect(document.getElementById('payacct'), acctData);
+        })
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+        });
+    }
+
+    function getBubblegum() {
+      
+      let payAcct = document.getElementById('payacct').value;
+      
+      algo_params()
+        .then((txParams) => {
+          // inputs
+          let assetOwner = "64MJOXX3UPYWW7GN2U2FMZJ55IOMIOI5V7XTVWZCJX5J4ZQHRFYEJK7M5Q";
+          let ratn = parseInt(1);       // 1 BUBBLE
+          let ratd = parseInt(1000000); // 1 ALGO
+          let assetID = 15431290;
+          let minTrade = 999999;        // will accept no less than 1000000 µAlgos
+          let maxFee = 2000;
+          let expiryRound = txParams['last-round'] + 1000;
+
+          return LimitOrder(assetOwner, assetID, ratn, ratd, expiryRound, minTrade, maxFee);
+        })
+        .then((limitContract) => console.log(limitContract))
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+        });
+    }
+
+    function renderAccountSelect(elem, data) {
+      elem.length = 0;
+
+      // append accounts
+      for (var i = data.length - 1; i >= 0; i--) {
+        appendSelectOption(elem,
+          data[i].address,
+          data[i].address);
+      }
+    }
+
+    document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnSignAndSend').addEventListener('click', getBubblegum);
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Get all "navbar-burger" elements
+      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+      // Check if there are any navbar burgers
+      if ($navbarBurgers.length > 0) {
+
+        // Add a click event on each of them
+        $navbarBurgers.forEach(el => {
+          el.addEventListener('click', () => {
+
+            // Get the target from the "data-target" attribute
+            const target = el.dataset.target;
+            const $target = document.getElementById(target);
+
+            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+            el.classList.toggle('is-active');
+            $target.classList.toggle('is-active');
+
+          });
+        });
+      }
+    });
+
+    var closeButtonElements = document.getElementsByClassName('delete');
+
+    for (var i = 0; i < closeButtonElements.length; i++) {
+      closeButtonElements[i].addEventListener('click', (e) => {
+        e.target.parentElement.parentElement.classList.add('is-hidden');
+      });
+    }
+  </script>
+  <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="static/js/algowrapper.js"></script>
+  <script src="static/js/site.js"></script>
+</body>
+
+</html>
