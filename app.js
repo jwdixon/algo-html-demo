@@ -33,29 +33,55 @@ http.createServer(function (request, response) {
       break;
   }
 
-  console.log(`serving ${filePath}...`);
+  if (request.method === 'POST') {
+    if (filePath == './limitorder') {
+      console.log(`POST ${filePath}...`);
+      require('./static/js/limitorder')();
+      console.log('limitorder');
+      limitorder();
 
-  fs.readFile(filePath, function (error, content) {
-    if (error) {
-      if (error.code == 'ENOENT') {
-        fs.readFile('./404.html', function (error, content) {
-          response.writeHead(200, {
-            'Content-Type': contentType
-          });
-          response.end(content, 'utf-8');
-        });
-      } else {
-        response.writeHead(500);
-        response.end('Sorry, check with the site admin for error: ' + error.code + ' ..\n');
-        response.end();
-      }
-    } else {
-      response.writeHead(200, {
-        'Content-Type': contentType
-      });
-      response.end(content, 'utf-8');
+      response.end(`OK`);
     }
-  });
+  } else {
+    console.log(`serving ${filePath}...`);
+
+    fs.readFile(filePath, function (error, content) {
+      if (error) {
+        if (error.code == 'ENOENT') {
+          fs.readFile('./404.html', function (error, content) {
+            response.writeHead(200, {
+              'Content-Type': contentType
+            });
+            response.end(content, 'utf-8');
+          });
+        } else {
+          response.writeHead(500);
+          response.end('Sorry, check with the site admin for error: ' + error.code + ' ..\n');
+          response.end();
+        }
+      } else {
+        response.writeHead(200, {
+          'Content-Type': contentType
+        });
+        response.end(content, 'utf-8');
+      }
+    });
+  }
 
 }).listen(8125);
 console.log('Server running at http://127.0.0.1:8125/');
+
+function collectRequestData(request, callback) {
+  const FORM_URLENCODED = 'application/x-www-form-urlencoded';
+  if (request.headers['content-type'] === FORM_URLENCODED) {
+    let body = '';
+    request.on('data', chunk => {
+      body += chunk.toString();
+    });
+    request.on('end', () => {
+      callback(parse(body));
+    });
+  } else {
+    callback(null);
+  }
+}
