@@ -154,8 +154,7 @@
       </div>
   </section>
   
-  <script type="module">
-    import { LimitOrder } from './static/js/algosdk.min.js'
+  <script>
     window.addEventListener("load", function () {
       checkForAlgosigner();
     });
@@ -173,8 +172,10 @@
     function fetchAccounts() {
       renderLoadingSelect(document.getElementById('payacct'));
 
-      algo_connect()
-        .then(algo_accounts)
+      AlgoSigner.connect()
+        .then(() => AlgoSigner.accounts({
+          ledger: 'TestNet'
+        }))
         .then((acctData) => {
           renderAccountSelect(document.getElementById('payacct'), acctData);
         })
@@ -186,80 +187,16 @@
     }
 
     function getBubblegum() {
-      
-      let payAcct = document.getElementById('payacct').value;
-      
-      algo_params()
-        .then((txParams) => {
-          // inputs
-          let assetOwner = "64MJOXX3UPYWW7GN2U2FMZJ55IOMIOI5V7XTVWZCJX5J4ZQHRFYEJK7M5Q";
-          let ratn = parseInt(1);       // 1 BUBBLE
-          let ratd = parseInt(1000000); // 1 ALGO
-          let assetID = 15431290;
-          let minTrade = 999999;        // will accept no less than 1000000 µAlgos
-          let maxFee = 2000;
-          let expiryRound = txParams['last-round'] + 1000;
+      var xhttp = new XMLHttpRequest();
 
-          return LimitOrder(assetOwner, assetID, ratn, ratd, expiryRound, minTrade, maxFee);
-        })
-        .then((limitContract) => console.log(limitContract))
-        .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
-        });
-    }
-
-    function renderAccountSelect(elem, data) {
-      elem.length = 0;
-
-      // append accounts
-      for (var i = data.length - 1; i >= 0; i--) {
-        appendSelectOption(elem,
-          data[i].address,
-          data[i].address);
-      }
+      xhttp.open("POST", "limitorder", true);
+      xhttp.send();
     }
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnSignAndSend').addEventListener('click', getBubblegum);
   </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-
-      // Get all "navbar-burger" elements
-      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-
-      // Check if there are any navbar burgers
-      if ($navbarBurgers.length > 0) {
-
-        // Add a click event on each of them
-        $navbarBurgers.forEach(el => {
-          el.addEventListener('click', () => {
-
-            // Get the target from the "data-target" attribute
-            const target = el.dataset.target;
-            const $target = document.getElementById(target);
-
-            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-            el.classList.toggle('is-active');
-            $target.classList.toggle('is-active');
-
-          });
-        });
-      }
-    });
-
-    var closeButtonElements = document.getElementsByClassName('delete');
-
-    for (var i = 0; i < closeButtonElements.length; i++) {
-      closeButtonElements[i].addEventListener('click', (e) => {
-        e.target.parentElement.parentElement.classList.add('is-hidden');
-      });
-    }
-  </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-  <script src="static/js/algowrapper.js"></script>
   <script src="static/js/site.js"></script>
 </body>
 
