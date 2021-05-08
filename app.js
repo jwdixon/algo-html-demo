@@ -1,6 +1,10 @@
 var http = require('http');
 var fs = require('fs');
 var path = require('path');
+var querystring = require('querystring');
+
+
+require('dotenv').config();
 
 http.createServer(function (request, response) {
   var filePath = '.' + request.url;
@@ -33,15 +37,48 @@ http.createServer(function (request, response) {
       break;
   }
 
-  if (request.method === 'POST') {
-    if (filePath == './limitorder') {
-      console.log(`POST ${filePath}...`);
-      require('./static/js/limitorder')();
-      console.log('limitorder');
-      limitorder();
+  if (filePath.includes('./createSignedBubblegumLimitContract')) {
+    var optionsQuerystring = filePath.split('?').pop();
 
-      response.end(`OK`);
-    }
+    var options = querystring.parse(optionsQuerystring);
+
+    require('./static/js/limitorder')();
+
+    createSignedBubblegumLimitContract(options['account'])
+      .then((data) => {
+        response.write(JSON.stringify({
+          "contractAddress": data
+        }));
+        response.statusCode = 200;
+        response.end();
+      })
+      .catch((e) => {
+        console.log(e);
+        response.write(e.message);
+        response.statusCode = e.status;
+        response.end();
+      });
+  } else if (filePath.includes('./executeBubblegumLimitContract')) {
+    var optionsQuerystring = filePath.split('?').pop();
+
+    var options = querystring.parse(optionsQuerystring);
+
+    require('./static/js/limitorder')();
+
+    executeBubblegumLimitContract(options['address'])
+      .then((data) => {
+        response.write(JSON.stringify({
+          "txId": data
+        }));
+        response.statusCode = 200;
+        response.end();
+      })
+      .catch((e) => {
+        console.log(e);
+        response.write(e.message);
+        response.statusCode = e.status;
+        response.end();
+      });
   } else {
     console.log(`serving ${filePath}...`);
 

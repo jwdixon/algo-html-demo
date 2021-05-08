@@ -138,7 +138,7 @@
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
                       <select id="payacct">
-                        <option>No accounts available</option>
+                        <option value="-1">No accounts available</option>
                       </select>
                     </div>
                     <div class="icon is-small is-left">
@@ -153,7 +153,7 @@
         <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
       </div>
   </section>
-  
+
   <script>
     window.addEventListener("load", function () {
       checkForAlgosigner();
@@ -187,10 +187,95 @@
     }
 
     function getBubblegum() {
-      var xhttp = new XMLHttpRequest();
+      let payacct = document.getElementById('payacct').value;
+      let contractAddress = null;
 
-      xhttp.open("POST", "limitorder", true);
-      xhttp.send();
+      fetch(`createSignedBubblegumLimitContract?account=${payacct}`)
+        .then((d) => d.json())
+        .then((d) => {
+          contractAddress = d.contractAddress;
+          console.log('contractAddress: ' + contractAddress);
+        })
+        .then(AlgoSigner.connect())
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // opt in to bubblegum
+        .then((txParams) => AlgoSigner.sign({
+          assetIndex: 15431290,
+          from: payacct,
+          amount: 0,
+          to: payacct,
+          type: 'axfer',
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        // pay for bubblegum
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        .then((txParams) => AlgoSigner.sign({
+          from: payacct,
+          to: contractAddress,
+          amount: +1000000,
+          note: 'Contract funding transaction',
+          type: 'pay',
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        .then((tx) => waitForAlgosignerConfirmation(tx))
+        .then(() => fetch(`executeBubblegumLimitContract?address=${contractAddress}`))
+        .then((d) => d.json())
+        .then((d) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+            " was successfully sent.";
+          document.getElementById('successDialog').classList.remove("is-hidden");
+        })
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+        });
+    }
+
+    async function waitForAlgosignerConfirmation(tx) {
+      console.log('waiting for confirmation');
+      let status = await AlgoSigner.algod({
+        ledger: 'TestNet',
+        path: '/v2/transactions/pending/' + tx.txId
+      });
+
+      while(true) {
+        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
+          //Got the completed Transaction
+          console.log('Transaction confirmed in round ' + status['confirmed-round']);
+          break;
+        }
+
+        status = await AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/pending/' + tx.txId
+        });
+      }
     }
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);

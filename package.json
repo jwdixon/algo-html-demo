@@ -4,7 +4,8 @@
   "description": "Algorand Features and Smart Contracts GUI Demo with AlgoSigner",
   "main": "app.js",
   "dependencies": {
-    "algosdk": "^1.8.1"
+    "algosdk": "^1.8.1",
+    "dotenv": "^8.2.0"
   },
   "devDependencies": {},
   "scripts": {
