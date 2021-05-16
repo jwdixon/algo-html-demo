@@ -75,7 +75,7 @@
           </a>
 
           <div class="navbar-dropdown">
-            <a class="navbar-item">
+            <a class="navbar-item" target="_blank" href="https://testnet.algoexplorer.io/dispenser">
               TestNet ALGO Faucet
             </a>
           </div>
@@ -365,6 +365,8 @@
       let signedTx2 = {};
       let txGroup = [];
 
+      let resultTx = {};
+
       AlgoSigner.connect()
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
@@ -442,9 +444,13 @@
             tx: grouped_txns
           });
         })
-        .then((d) => {
+        .then((tx) => {
+          resultTx = tx;
+          return waitForAlgosignerConfirmation(tx);
+        })
+        .then(() => {
           // was successful
-          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + resultTx.txId +
             " was successfully sent.";
           document.getElementById('successDialog').classList.remove("is-hidden");
         })
@@ -453,6 +459,27 @@
           document.getElementById('errorMessage').innerHTML = e.message;
           document.getElementById('errorDialog').classList.remove("is-hidden");
         });
+    }
+
+    async function waitForAlgosignerConfirmation(tx) {
+      console.log('waiting for confirmation');
+      let status = await AlgoSigner.algod({
+        ledger: 'TestNet',
+        path: '/v2/transactions/pending/' + tx.txId
+      });
+
+      while(true) {
+        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
+          //Got the completed Transaction
+          console.log('Transaction confirmed in round ' + status['confirmed-round']);
+          break;
+        }
+
+        status = await AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/pending/' + tx.txId
+        });
+      }
     }
 
     document.getElementById('from_left').addEventListener('change', function () {

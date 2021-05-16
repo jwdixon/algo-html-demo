@@ -5,10 +5,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Create an Asset - Algorand Features and Smart Contracts Demo</title>
+  <title>Hash Time Lock - Algorand Features and Smart Contracts Demo</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
     integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
     crossorigin="anonymous" />
+  <script src="static/js/algosdk.min.js"></script>
 </head>
 
 <body>
@@ -117,24 +118,26 @@
         </p>
       </div>
 
-      <div id="divCreateAsset" class="is-hidden">
-        <h1 class="title">Create an Asset</h1>
+      <div id="divTransaction" class="is-hidden">
+        <h1 class="title">Hash Time Lock - Hotel Key Demo</h1>
 
         <p class="subtitle">
-          Create an asset on the Algorand blockchain.
+          Pay Algos for a hotel room. If you don't get the hotel room for some reason, your money is refunded. 
+          If you don't have any Algos to test with, use the TestNet Faucet in the Tools menu to add Algos to your
+          TestNet account.
         </p>
 
         <div class="columns">
           <div class="column">
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">From</label>
+                <label class="label">Payment Account</label>
               </div>
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="from">
+                      <select id="payacct">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -145,86 +148,22 @@
                 </div>
               </div>
             </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Name of Asset</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_name">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-signature"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Asset Unit Name</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_unit_name">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-signature"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Total Units</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_total">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-coins"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Decimals</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_decimals">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-coins"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Note</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <input class="input" id="note" placeholder="(optional)">
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-sticky-note"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
-        <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
+        <div class="columns">
+          <div class="column">
+            <button class="button is-dark is-fullwidth" id="btnPayAlgos">Guest - pay 10,000 µAlgos for the room</button>
+          </div>
+          <div class="column">
+            <button class="button is-dark is-fullwidth" id="btnDispenseKey">Concierge - dispense room key</button>
+          </div>
+          <div class="column">
+            <button class="button is-dark is-fullwidth" id="btnDispenseKey">Concierge - room is unavailable</button>
+          </div>
+        </div>
       </div>
   </section>
+
   <script>
     window.addEventListener("load", function () {
       checkForAlgosigner();
@@ -233,7 +172,7 @@
     function checkForAlgosigner() {
       if (typeof AlgoSigner !== 'undefined') {
         document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('divCreateAsset').classList.remove("is-hidden");
+        document.getElementById('divTransaction').classList.remove("is-hidden");
       } else {
         document.getElementById('divCheck').classList.remove("is-hidden");
         document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
@@ -241,65 +180,14 @@
     }
 
     function fetchAccounts() {
-      let selFrom = document.getElementById('from');
+      renderLoadingSelect(document.getElementById('payacct'));
 
       AlgoSigner.connect()
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
         .then((acctData) => {
-          renderAccountSelect(selFrom, acctData);
-        })
-        .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
-        });
-    }
-
-    function signAndSendTransaction() {
-      let from = document.getElementById('from').value;
-      let assetName = document.getElementById('asset_name').value;
-      let assetUnit = document.getElementById('asset_unit_name').value;
-      let assetTotal = document.getElementById('asset_total').value;
-      let assetDecimals = document.getElementById('asset_decimals').value;
-      let assetNote = document.getElementById('note').value;
-
-      let resultTx = {};
-
-      AlgoSigner.algod({
-          ledger: 'TestNet',
-          path: '/v2/transactions/params'
-        })
-        .then((txParams) => AlgoSigner.sign({
-          from: from,
-          assetName: assetName,
-          assetUnitName: assetUnit,
-          assetTotal: +assetTotal,
-          assetDecimals: +assetDecimals,
-          note: assetNote,
-          type: 'acfg',
-          fee: txParams['min-fee'],
-          firstRound: txParams['last-round'],
-          lastRound: txParams['last-round'] + 1000,
-          genesisID: txParams['genesis-id'],
-          genesisHash: txParams['genesis-hash'],
-          flatFee: true
-        }))
-        .then((signedTx) => AlgoSigner.send({
-          ledger: 'TestNet',
-          tx: signedTx.blob
-        }))
-        .then((tx) => {
-          resultTx = tx;
-          return waitForAlgosignerConfirmation(tx);
-        })
-        .then(() => {
-          // was successful
-          document.getElementById('successMessage').innerHTML = "An asset named &quot;" + assetName +
-            "&quot; was created. <a href='https://testnet.algoexplorer.io/tx/" + resultTx.txId +
-            "'>View on AlgoExplorer</a>"
-          document.getElementById('successDialog').classList.remove("is-hidden");
+          renderAccountSelect(document.getElementById('payacct'), acctData);
         })
         .catch((e) => {
           console.error(e);
@@ -330,7 +218,6 @@
     }
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
-    document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>

@@ -76,7 +76,7 @@
           </a>
 
           <div class="navbar-dropdown">
-            <a class="navbar-item">
+            <a class="navbar-item" target="_blank" href="https://testnet.algoexplorer.io/dispenser">
               TestNet ALGO Faucet
             </a>
           </div>
@@ -196,12 +196,14 @@
           contractAddress = d.contractAddress;
           console.log('contractAddress: ' + contractAddress);
         })
+        // connect to AlgoSigner
         .then(AlgoSigner.connect())
+        // get the current params
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
         }))
-        // opt in to bubblegum
+        // opt in to BUBBLE
         .then((txParams) => AlgoSigner.sign({
           assetIndex: 15431290,
           from: payacct,
@@ -219,11 +221,12 @@
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
-        // pay for bubblegum
+        // get the current params
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
         }))
+        // pay for BUBBLE
         .then((txParams) => AlgoSigner.sign({
           from: payacct,
           to: contractAddress,
@@ -242,6 +245,7 @@
           tx: signedTx.blob
         }))
         .then((tx) => waitForAlgosignerConfirmation(tx))
+        // after the contract funding is confirmed, swap the assets
         .then(() => fetch(`executeBubblegumLimitContract?address=${contractAddress}`))
         .then((d) => d.json())
         .then((d) => {

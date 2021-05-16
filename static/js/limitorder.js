@@ -1,51 +1,52 @@
 module.exports = function () {
-  // Handle importing needed modules
+  // let's import the needed modules
   const algosdk = require('algosdk');
   const fs = require('fs').promises;
   const limitTemplate = require("algosdk/src/logicTemplates/limitorder");
   var algoutils = require("./algoutils");
 
-  let bubblegumAccountMnemonic =
-    "soft cloth blanket account dwarf title initial sweet retreat kiwi " +
-    "minor maximum jaguar athlete excess sound ridge slow palm bid tackle " +
-    "honey analyst absent clarify";
-
+  // constants to use for the Algod client
   const token = {
-    'X-API-Key': `${process.env.API_KEY}`
+    'X-API-Key': `${process.env.API_KEY}` // 'YOUR PURESTAKE API KEY HERE'
   }
 
   const server = 'https://testnet-algorand.api.purestake.io/ps2';
   const port = '';
 
+  // private key mnemonic to reconstitute the account that owns the BUBBLE asset
+  let bubblegumAccountMnemonic =
+    "soft cloth blanket account dwarf title initial sweet retreat kiwi " +
+    "minor maximum jaguar athlete excess sound ridge slow palm bid tackle " +
+    "honey analyst absent clarify";
+
   this.createSignedBubblegumLimitContract = async function (contractOwner) {
+    // create the client
     let algodClient = new algosdk.Algodv2(token, server, port);
 
     let txParams = await algodClient.getTransactionParams().do();
 
-    let ratn = parseInt(1);
-    let ratd = parseInt(1000000);
-    let assetID = 15431290;
-    let minTrade = 999999;
+    let ratn = parseInt(1); // 1 BUBBLE
+    let ratd = parseInt(1000000); // for 1 Algo
+    let assetID = 15431290; // ID of the BUBBLE asset
+    let minTrade = 999999;  // minimum number of microAlgos to accept
     let expiryRound = txParams.lastRound + parseInt(1000);
-    let maxFee = 2000;
+    let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
 
-    console.log('contractOwner: ' + contractOwner);
-
+    // create the limit contract
     let limit = new limitTemplate.LimitOrder(contractOwner, assetID, ratn, ratd,
       expiryRound, minTrade, maxFee);
 
+    // store the TEAL program and the address of the contract
     let limitProgram = limit.getProgram();
     let limitAddress = limit.getAddress();
 
+    // at this point you can write the contract to storage in order to reference it later
+    // we're going to do that right now
     await fs.writeFile(`static/limitcontracts/${limitAddress}`, limitProgram);
-
-    console.log('limit program written.');
-
     
+    // next, we fund the contract account with the minimum amount of microAlgos required
+    // this is 100,000 (minimum) + 2,000 (the max fee)
     let assetOwner = algosdk.mnemonicToSecretKey(bubblegumAccountMnemonic);
-
-    // fund contract account with 100000 microAlgos to cover minimum / fees
-
     let note = algosdk.encodeObj("Contract funding transaction");
     let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr, limitAddress, 
       100000 + maxFee, undefined, note, txParams);
@@ -53,24 +54,27 @@ module.exports = function () {
     let resultTx = (await algodClient.sendRawTransaction(signedFundingTx).do());
     await algoutils.waitForConfirmation(algodClient, resultTx.txId);
 
+    // return the limit order's address on the blockchain
     return limitAddress;
   }
 
   this.executeBubblegumLimitContract = async function (contractAddress) {
+    // read the TEAL program from local storage
     const data = await fs.readFile(`static/limitcontracts/${contractAddress}`);
     let limitProgram = data;
-    console.log('limit program read.');
 
+    // create the client
     let algodClient = new algosdk.Algodv2(token, server, port);
 
+    // set the proper amounts
     let assetAmount = parseInt(1);
     let microAlgoAmount = parseInt(1000000);
 
     let txParams = await algodClient.getTransactionParams().do();
 
+    // swap 1 BUBBLE for 1,000,000 microAlgos
     let assetOwner = algosdk.mnemonicToSecretKey(bubblegumAccountMnemonic);
     let secretKey = assetOwner.sk;
-
     let txnBytes = limitTemplate.getSwapAssetsTransaction(limitProgram, assetAmount,
       microAlgoAmount, secretKey, txParams.fee, txParams.firstRound, txParams.lastRound,
       txParams.genesisHash);
@@ -79,6 +83,7 @@ module.exports = function () {
     console.log(tx);
     await algoutils.waitForConfirmation(algodClient, tx.txId);
 
+    // return the transaction ID
     return tx.txId;
   }
 }
