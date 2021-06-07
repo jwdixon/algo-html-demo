@@ -10,6 +10,15 @@
     integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
     crossorigin="anonymous" />
   <script src="static/js/algosdk.min.js"></script>
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
 </head>
 
 <body>
@@ -154,6 +163,16 @@
       </div>
   </section>
 
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <span id="processingMessage">Processing, please wait...</span>
+        <progress class="progress is-small is-primary mt-1" max="100">15%</progress>
+      </div>
+    </div>
+  </div>
+
   <script>
     window.addEventListener("load", function () {
       checkForAlgosigner();
@@ -187,14 +206,19 @@
     }
 
     function getBubblegum() {
+      showProcessingModal();
+
       let payacct = document.getElementById('payacct').value;
       let contractAddress = null;
+
+      document.getElementById('processingMessage').innerHTML = "Creating limit contract...";
 
       fetch(`createSignedBubblegumLimitContract?account=${payacct}`)
         .then((d) => d.json())
         .then((d) => {
           contractAddress = d.contractAddress;
           console.log('contractAddress: ' + contractAddress);
+          document.getElementById('processingMessage').innerHTML = "Sending opt-in transaction...";
         })
         // connect to AlgoSigner
         .then(AlgoSigner.connect())
@@ -221,6 +245,9 @@
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
+        .then((d) => {
+          document.getElementById('processingMessage').innerHTML = "Funding contract...";
+        })
         // get the current params
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
@@ -245,6 +272,9 @@
           tx: signedTx.blob
         }))
         .then((tx) => waitForAlgosignerConfirmation(tx))
+        .then((d) => {
+          document.getElementById('processingMessage').innerHTML = "Executing contract...";
+        })
         // after the contract funding is confirmed, swap the assets
         .then(() => fetch(`executeBubblegumLimitContract?address=${contractAddress}`))
         .then((d) => d.json())
@@ -253,11 +283,13 @@
           document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
             " was successfully sent.";
           document.getElementById('successDialog').classList.remove("is-hidden");
+          hideProcessingModal();
         })
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
           document.getElementById('errorDialog').classList.remove("is-hidden");
+          hideProcessingModal();
         });
     }
 
@@ -280,6 +312,18 @@
           path: '/v2/transactions/pending/' + tx.txId
         });
       }
+    }
+
+    function showProcessingModal() {
+      document.getElementById('processingModal').classList.add("is-active");
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+    }
+
+    function hideProcessingModal() {
+      document.getElementById('processingModal').classList.remove("is-active");
+      document.body.style.overflow = "auto";
+      document.body.style.position = "";
     }
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);

@@ -10,6 +10,15 @@
     integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
     crossorigin="anonymous" />
   <script src="static/js/algosdk.min.js"></script>
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
 </head>
 
 <body>
@@ -119,50 +128,140 @@
       </div>
 
       <div id="divTransaction" class="is-hidden">
-        <h1 class="title">Hash Time Lock - Hotel Key Demo</h1>
+        <h1 class="title">Hash Time Lock - Atomic Swap Demo</h1>
 
         <p class="subtitle">
-          Pay Algos for a hotel room. If you don't get the hotel room for some reason, your money is refunded. 
-          If you don't have any Algos to test with, use the TestNet Faucet in the Tools menu to add Algos to your
-          TestNet account.
+          Sell your Algorand Standard Assets (ASAs) for Algos. If you don't have any ASAs, generate some <a href="asset-creation.html">here</a>.
         </p>
 
-        <div class="columns">
-          <div class="column">
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">Payment Account</label>
+        <div class="box">
+          <h4 class="title is-4">Step 1</h1>
+          <p class="subtitle">
+            Create an order to sell an ASA for Algos
+          </p>
+    
+          <div class="columns">
+            <div class="column">
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">From</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control is-expanded has-icons-left">
+                      <div class="select is-fullwidth">
+                        <select id="from">
+                          <option value="-1">No accounts available</option>
+                        </select>
+                      </div>
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-wallet"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="field-body">
-                <div class="field">
-                  <div class="control is-expanded has-icons-left">
-                    <div class="select is-fullwidth">
-                      <select id="payacct">
-                        <option value="-1">No accounts available</option>
-                      </select>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">To</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control is-expanded has-icons-left">
+                      <div class="select is-fullwidth">
+                        <select id="to">
+                          <option value="-1">No accounts available</option>
+                        </select>
+                      </div>
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-wallet"></i>
+                      </div>
                     </div>
-                    <div class="icon is-small is-left">
-                      <i class="fas fa-wallet"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Asset to Sell</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control is-expanded has-icons-left">
+                      <div class="select is-fullwidth">
+                        <select id="asset">
+                          <option>No assets available</option>
+                        </select>
+                      </div>
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-wallet"></i>
+                      </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Amount of Asset</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control is-expanded has-icons-left">
+                      <input class="input" id="assetamount">
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-coins"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Amount of µAlgos</label>
+                </div>
+                <div class="field-body">
+                  <div class="field has-addons">
+                    <div class="control is-expanded has-icons-left">
+                      <input class="input" id="algoamount" placeholder="µAlgos"
+                        onchange="updateMicroAlgoConverter(this.value);">
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-coins"></i>
+                      </div>
+                    </div>
+                    <p class="control">
+                      <a class="button is-static" id="microToAlgo">
+                        0 Algos
+                      </a>
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <div class="columns">
+            <div class="column">
+              <button class="button is-dark is-fullwidth" id="btnCreateOrder">Create Order</button>
+            </div>
+          </div>
         </div>
-        <div class="columns">
-          <div class="column">
-            <button class="button is-dark is-fullwidth" id="btnPayAlgos">Guest - pay 10,000 µAlgos for the room</button>
-          </div>
-          <div class="column">
-            <button class="button is-dark is-fullwidth" id="btnDispenseKey">Concierge - dispense room key</button>
-          </div>
-          <div class="column">
-            <button class="button is-dark is-fullwidth" id="btnDispenseKey">Concierge - room is unavailable</button>
-          </div>
+        
+        <div class="box">
+          <h4 class="title is-4">Step 2</h1>
+          <p class="subtitle">
+            Respond to an order
+          </p>
         </div>
       </div>
   </section>
+
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <span id="processingMessage">Processing, please wait...</span>
+        <progress class="progress is-small is-primary mt-1" max="100">15%</progress>
+      </div>
+    </div>
+  </div>
 
   <script>
     window.addEventListener("load", function () {
@@ -180,19 +279,82 @@
     }
 
     function fetchAccounts() {
-      renderLoadingSelect(document.getElementById('payacct'));
+      let selFrom = document.getElementById('from');
+      let selTo = document.getElementById('to');
+      let selAsset = document.getElementById('asset');
+
+      renderLoadingSelect(selFrom);
+      renderLoadingSelect(selTo);
+      renderLoadingSelect(selAsset);
 
       AlgoSigner.connect()
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
         .then((acctData) => {
-          renderAccountSelect(document.getElementById('payacct'), acctData);
+          renderAccountSelect(selFrom, acctData);
+          renderAccountSelect(selTo, acctData);
+        })
+        .then(() => fetchAssets(selFrom.value))
+        .then((assetData) => renderAssetSelect(selAsset, assetData))
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+        });
+    }
+
+    function fetchAssets(account) {
+      if (account != -1) {
+        let assetData = [];
+
+        return AlgoSigner.algod({
+            ledger: 'TestNet',
+            path: `/v2/accounts/${account}`
+          })
+          .then((accountData) => {
+            return accountData.assets.reduce(
+              (promise, asset) => promise.then(() =>
+                AlgoSigner.indexer({
+                  ledger: 'TestNet',
+                  path: `/v2/assets/${asset['asset-id']}`
+                })
+                .then((d) => assetData.push(d))
+              ),
+              Promise.resolve());
+          })
+          .then(() => assetData)
+          .catch((e) => {
+            console.error(e);
+            document.getElementById('errorMessage').innerHTML = e.message;
+            document.getElementById('errorDialog').classList.remove("is-hidden");
+          });
+      } else {
+        return [];
+      }
+    }
+
+    function createHtlc() {
+      showProcessingModal();
+
+      let from = document.getElementById('from').value;
+      let to = document.getElementById('to').value;
+
+      document.getElementById('processingMessage').innerHTML = "Creating hash time lock contract...";
+    
+      fetch(`createHashTimeLockContract?owner=${from}&receiver=${to}`)
+      .then((d) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+            " was successfully sent.";
+          document.getElementById('successDialog').classList.remove("is-hidden");
+          hideProcessingModal();
         })
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
           document.getElementById('errorDialog').classList.remove("is-hidden");
+          hideProcessingModal();
         });
     }
 
@@ -217,7 +379,36 @@
       }
     }
 
+    function updateMicroAlgoConverter(microAlgoValue) {
+      document.getElementById('microToAlgo').innerHTML = `${microAlgosToAlgos(microAlgoValue)} Algos`;
+    }
+
+    function microAlgosToAlgos(numMicroAlgos) {
+      return (numMicroAlgos / 1000000).toFixed(6);
+    }
+
+    function showProcessingModal() {
+      document.getElementById('processingModal').classList.add("is-active");
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+    }
+
+    function hideProcessingModal() {
+      document.getElementById('processingModal').classList.remove("is-active");
+      document.body.style.overflow = "auto";
+      document.body.style.position = "";
+    }
+
+    document.getElementById('from').addEventListener('change', function () {
+      let selAsset = document.getElementById('asset');
+
+      renderLoadingSelect(selAsset);
+      fetchAssets(this.value)
+        .then((assetData) => renderAssetSelect(selAsset, assetData))
+    });
+
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnCreateOrder').addEventListener('click', createHtlc);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>

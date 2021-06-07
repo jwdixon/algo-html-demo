@@ -3,7 +3,6 @@ var fs = require('fs');
 var path = require('path');
 var querystring = require('querystring');
 
-
 require('dotenv').config();
 
 http.createServer(function (request, response) {
@@ -66,6 +65,27 @@ http.createServer(function (request, response) {
     require('./static/js/limitorder')();
 
     executeBubblegumLimitContract(options['address'])
+      .then((data) => {
+        response.write(JSON.stringify({
+          "txId": data
+        }));
+        response.statusCode = 200;
+        response.end();
+      })
+      .catch((e) => {
+        console.log(e);
+        response.write(e.message);
+        response.statusCode = e.status;
+        response.end();
+      });
+  } else if (filePath.includes('./createHashTimeLockContract')) {
+    var optionsQuerystring = filePath.split('?').pop();
+
+    var options = querystring.parse(optionsQuerystring);
+
+    require('./static/js/hashtimelock')();
+
+    createHashTimeLockContract(options['owner'], options['receiver'])
       .then((data) => {
         response.write(JSON.stringify({
           "txId": data

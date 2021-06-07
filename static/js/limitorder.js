@@ -25,14 +25,16 @@ module.exports = function () {
 
     let txParams = await algodClient.getTransactionParams().do();
 
+    // INPUTS
+
     let ratn = parseInt(1); // 1 BUBBLE
     let ratd = parseInt(1000000); // for 1 Algo
     let assetID = 15431290; // ID of the BUBBLE asset
     let minTrade = 999999;  // minimum number of microAlgos to accept
-    let expiryRound = txParams.lastRound + parseInt(1000);
+    let expiryRound = txParams.lastRound + parseInt(10000);
     let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
 
-    // create the limit contract
+    // create the limit contract template
     let limit = new limitTemplate.LimitOrder(contractOwner, assetID, ratn, ratd,
       expiryRound, minTrade, maxFee);
 
