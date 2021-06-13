@@ -33,42 +33,26 @@ module.exports = function() {
 
     let args = [strRandomWords];
 
-    console.log(args);
-
     let hashImg = crypto.createHash('sha256').update(strRandomWords).digest('base64');
-
-    console.log(hashImg);
 
     let htlc = new htlcTemplate.HTLC(contractOwner, contractReceiver, hashFn, hashImg,
       expiryRound, maxFee);
 
     let program = htlc.getProgram();
+    let address = htlc.getAddress();
+
     let lsig = algosdk.makeLogicSig(program, args);
 
-    // NEEDS FUNDING - START HERE dixonjw 20210607
+    // at this point you can write the contract to storage in order to reference it later
+    // we're going to do that right now
+    await fs.writeFile(`static/contracts/${address}`, program);
 
-    //create a transaction
-    let txn = {
-      "from": htlc.getAddress(),
-      "to": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ", // zero-address
-      "fee": 1,
-      "type": "pay",
-      "amount": 0,
-      "firstRound": txParams.firstRound,
-      "lastRound": endRound,
-      "genesisID": txParams.genesisID,
-      "genesisHash": txParams.genesisHash,
-      "closeRemainderTo": contractReceiver
-    };
-    // create logic signed transaction.
-    let rawSignedTxn = algosdk.signLogicSigTransaction(txn, lsig);
+    // also write the logic signature to a file
+    await fs.writeFile(`static/lsig/${address}`, lsig);
 
-    //Submit the lsig signed transaction
-    let tx = (await algodClient.sendRawTransaction(rawSignedTxn.blob).do());
-    console.log("Transaction : " + tx.txId);
-    await algoutils.waitForConfirmation(algodClient, tx.txId);
+    // need to fund and create logic sig transaction in order to see how it all
+    // comes together
 
-    // return the transaction ID
-    return tx.txId;
+    return address;
   }
 }

@@ -1,3 +1,4 @@
 node_modules
 .env
-static/limitcontracts
+static/contracts
+static/lsig
