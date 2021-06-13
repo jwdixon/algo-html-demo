@@ -19,7 +19,7 @@ module.exports = function () {
     "minor maximum jaguar athlete excess sound ridge slow palm bid tackle " +
     "honey analyst absent clarify";
 
-  this.createSignedBubblegumLimitContract = async function (contractOwner) {
+  this.createBubblegumLimitContract = async function (contractOwner) {
     // create the client
     let algodClient = new algosdk.Algodv2(token, server, port);
 
@@ -29,7 +29,7 @@ module.exports = function () {
 
     let ratn = parseInt(1); // 1 BUBBLE
     let ratd = parseInt(1000000); // for 1 Algo
-    let assetID = 15431290; // ID of the BUBBLE asset
+    let assetID = 15431290;  // ID of the BUBBLE asset
     let minTrade = 999999;  // minimum number of microAlgos to accept
     let expiryRound = txParams.lastRound + parseInt(10000);
     let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
@@ -45,13 +45,19 @@ module.exports = function () {
     // at this point you can write the contract to storage in order to reference it later
     // we're going to do that right now
     await fs.writeFile(`static/contracts/${address}`, program);
-    
+
     // next, we fund the contract account with the minimum amount of microAlgos required
-    // this is 100,000 (minimum) + 2,000 (the max fee)
+    // this is 100,000 microAlgos (account minimum) plus two suggested fee amounts, one for
+    // the contract funding transaction and one for the asset swap transaction
+    // sender pays fee to send the required amount of Algos to the contract
+    // so that's a total of 102,000 microAlgos
+
+    let suggestedFee = Math.max(txParams.fee, txParams.minFee);
+
     let assetOwner = algosdk.mnemonicToSecretKey(bubblegumAccountMnemonic);
     let note = algosdk.encodeObj("Contract funding transaction");
-    let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr, address, 
-      100000 + maxFee, undefined, note, txParams);
+    let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr, 
+      address, 100000 + (1000 * 2), undefined, note, txParams);
     let signedFundingTx = fundingTx.signTxn(assetOwner.sk);
     let resultTx = (await algodClient.sendRawTransaction(signedFundingTx).do());
     await algoutils.waitForConfirmation(algodClient, resultTx.txId);
@@ -62,7 +68,7 @@ module.exports = function () {
 
   this.executeBubblegumLimitContract = async function (contractAddress) {
     // read the TEAL program from local storage
-    const data = await fs.readFile(`static/limitcontracts/${contractAddress}`);
+    const data = await fs.readFile(`static/contracts/${contractAddress}`);
     let limitProgram = data;
 
     // create the client
@@ -74,7 +80,7 @@ module.exports = function () {
 
     let txParams = await algodClient.getTransactionParams().do();
 
-    // swap 1 BUBBLE for 1,000,000 microAlgos
+    // swap 1 BUBBLE for 1,000,000 microAlgos (+fee)
     let assetOwner = algosdk.mnemonicToSecretKey(bubblegumAccountMnemonic);
     let secretKey = assetOwner.sk;
     let txnBytes = limitTemplate.getSwapAssetsTransaction(limitProgram, assetAmount,

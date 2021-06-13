@@ -36,14 +36,14 @@ http.createServer(function (request, response) {
       break;
   }
 
-  if (filePath.includes('./createSignedBubblegumLimitContract')) {
+  if (filePath.includes('./createBubblegumLimitContract')) {
     var optionsQuerystring = filePath.split('?').pop();
 
     var options = querystring.parse(optionsQuerystring);
 
     require('./static/js/limitorder')();
 
-    createSignedBubblegumLimitContract(options['account'])
+    createBubblegumLimitContract(options['account'])
       .then((data) => {
         response.write(JSON.stringify({
           "contractAddress": data

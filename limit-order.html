@@ -205,7 +205,7 @@
         });
     }
 
-    function getBubblegum() {
+    function executeBubblegumTransaction() {
       showProcessingModal();
 
       let payacct = document.getElementById('payacct').value;
@@ -213,7 +213,7 @@
 
       document.getElementById('processingMessage').innerHTML = "Creating limit contract...";
 
-      fetch(`createSignedBubblegumLimitContract?account=${payacct}`)
+      fetch(`createBubblegumLimitContract?account=${payacct}`)
         .then((d) => d.json())
         .then((d) => {
           contractAddress = d.contractAddress;
@@ -258,9 +258,9 @@
           from: payacct,
           to: contractAddress,
           amount: +1000000,
-          note: 'Contract funding transaction',
+          note: 'Pay for BUBBLE',
           type: 'pay',
-          fee: txParams['min-fee'],
+          fee: txParams['fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
           genesisID: txParams['genesis-id'],
@@ -327,7 +327,7 @@
     }
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
-    document.getElementById('btnSignAndSend').addEventListener('click', getBubblegum);
+    document.getElementById('btnSignAndSend').addEventListener('click', executeBubblegumTransaction);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>
