@@ -128,16 +128,12 @@
       </div>
 
       <div id="divTransaction" class="is-hidden">
-        <h1 class="title">Hash Time Lock - Atomic Swap Demo</h1>
-
-        <p class="subtitle">
-          Sell your Algorand Standard Assets (ASAs) for Algos. If you don't have any ASAs, generate some <a href="asset-creation.html">here</a>.
-        </p>
+        <h1 class="title">Hash Time Lock - Safe Deposit Demo</h1>
 
         <div class="box">
           <h4 class="title is-4">Step 1</h1>
           <p class="subtitle">
-            Create an order to sell an ASA for Algos
+            Create a password-protected deposit
           </p>
     
           <div class="columns">
@@ -182,41 +178,7 @@
               </div>
               <div class="field is-horizontal">
                 <div class="field-label is-normal">
-                  <label class="label">Asset to Sell</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <div class="control is-expanded has-icons-left">
-                      <div class="select is-fullwidth">
-                        <select id="asset">
-                          <option>No assets available</option>
-                        </select>
-                      </div>
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-wallet"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">Amount of Asset</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <div class="control is-expanded has-icons-left">
-                      <input class="input" id="assetamount">
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-coins"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">Amount of µAlgos</label>
+                  <label class="label">Deposit</label>
                 </div>
                 <div class="field-body">
                   <div class="field has-addons">
@@ -235,11 +197,26 @@
                   </div>
                 </div>
               </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Passphrase</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control is-expanded has-icons-left">
+                      <input class="input" type="text">
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-lock"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="columns">
             <div class="column">
-              <button class="button is-dark is-fullwidth" id="btnCreateOrder">Create Order</button>
+              <button class="button is-dark is-fullwidth" id="btnMakeDeposit">Make Safe Deposit</button>
             </div>
           </div>
         </div>
@@ -247,7 +224,7 @@
         <div class="box">
           <h4 class="title is-4">Step 2</h1>
           <p class="subtitle">
-            Respond to an order
+            Claim the deposit using the correct password
           </p>
         </div>
       </div>
@@ -408,7 +385,7 @@
     });
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
-    document.getElementById('btnCreateOrder').addEventListener('click', createHtlc);
+    document.getElementById('btnMakeDeposit').addEventListener('click', createHtlc);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>

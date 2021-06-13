@@ -39,25 +39,25 @@ module.exports = function () {
       expiryRound, minTrade, maxFee);
 
     // store the TEAL program and the address of the contract
-    let limitProgram = limit.getProgram();
-    let limitAddress = limit.getAddress();
+    let program = limit.getProgram();
+    let address = limit.getAddress();
 
     // at this point you can write the contract to storage in order to reference it later
     // we're going to do that right now
-    await fs.writeFile(`static/limitcontracts/${limitAddress}`, limitProgram);
+    await fs.writeFile(`static/contracts/${address}`, program);
     
     // next, we fund the contract account with the minimum amount of microAlgos required
     // this is 100,000 (minimum) + 2,000 (the max fee)
     let assetOwner = algosdk.mnemonicToSecretKey(bubblegumAccountMnemonic);
     let note = algosdk.encodeObj("Contract funding transaction");
-    let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr, limitAddress, 
+    let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr, address, 
       100000 + maxFee, undefined, note, txParams);
     let signedFundingTx = fundingTx.signTxn(assetOwner.sk);
     let resultTx = (await algodClient.sendRawTransaction(signedFundingTx).do());
     await algoutils.waitForConfirmation(algodClient, resultTx.txId);
 
     // return the limit order's address on the blockchain
-    return limitAddress;
+    return address;
   }
 
   this.executeBubblegumLimitContract = async function (contractAddress) {
