@@ -99,6 +99,56 @@ http.createServer(function (request, response) {
         response.statusCode = e.status;
         response.end();
       });
+  } else if (filePath.includes('./executeHashTimeLockContract')) {
+    var optionsQuerystring = filePath.split('?').pop();
+
+    var options = querystring.parse(optionsQuerystring);
+
+    // stub
+    
+  } else if (filePath.includes('./createSplitContract')) {
+    var optionsQuerystring = filePath.split('?').pop();
+
+    var options = querystring.parse(optionsQuerystring);
+
+    require('./static/js/split')();
+
+    createSplitContract(options['sender'], options['recipient1'], options['ratio1'], 
+      options['recipient2'], options['ratio2'])
+      .then((data) => {
+        response.write(JSON.stringify({
+          "contractAddress": data
+        }));
+        response.statusCode = 200;
+        response.end();
+      })
+      .catch((e) => {
+        console.log(e);
+        response.write(e.message);
+        response.statusCode = e.status;
+        response.end();
+      });
+  } else if (filePath.includes('./executeSplitContract')) {
+    var optionsQuerystring = filePath.split('?').pop();
+
+    var options = querystring.parse(optionsQuerystring);
+
+    require('./static/js/split')();
+
+    executeSplitContract(options['address'], options['amount'])
+      .then((data) => {
+        response.write(JSON.stringify({
+          "txId": data
+        }));
+        response.statusCode = 200;
+        response.end();
+      })
+      .catch((e) => {
+        console.log(e);
+        response.write(e.message);
+        response.statusCode = e.status;
+        response.end();
+      });
   } else {
     console.log(`serving ${filePath}...`);
 

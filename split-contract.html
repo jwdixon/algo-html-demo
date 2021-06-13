@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Split Contract - Algorand Features and Smart Contracts Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
+    integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
+    crossorigin="anonymous" />
+  <script src="static/js/algosdk.min.js"></script>
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://algorand.com">
+        <img src="static/img/algorand_logo_mark_black.svg" style="height:100px;">
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="algoDemoNavbar">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="algoDemoNavbar" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="index.html">
+          Introduction
+        </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Transactions
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="algo-transfer.html">
+              ALGO Transfer
+            </a>
+            <a class="navbar-item" href="asa-transfer.html">
+              ASA Transfer
+            </a>
+            <a class="navbar-item" href="asset-creation.html">
+              Asset Creation
+            </a>
+            <a class="navbar-item" href="atomic-transfer.html">
+              Atomic Transfer
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Smart Contracts
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="limit-order.html">
+              Limit Order Contract
+            </a>
+            <a class="navbar-item" href="hash-time-lock.html">
+              Hash Time Lock Contract
+            </a>
+            <a class="navbar-item" href="split-contract.html">
+              Split Contract
+            </a>
+          </div>
+        </div>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Tools
+          </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item" target="_blank" href="https://testnet.algoexplorer.io/dispenser">
+              TestNet ALGO Faucet
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <button class="button is-info" id="btnRefreshAccounts">Refresh Accounts</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      <article id="successDialog" class="message is-success is-hidden">
+        <div class="message-header">
+          <p>Success</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          <span id="successMessage"></span>
+        </div>
+      </article>
+      <article id="errorDialog" class="message is-danger is-hidden">
+        <div class="message-header">
+          <p>Error</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          An error occurred: <span id="errorMessage"></span>
+        </div>
+      </article>
+
+      <div id="divCheck" class="is-hidden">
+        <h1 class="title">AlgoSigner not installed!</h1>
+        <p class="subtitle">
+          You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
+        </p>
+      </div>
+
+      <div id="divTransaction" class="is-hidden">
+        <h1 class="title">Split Contract Demo</h1>
+
+        <p class="subtitle">
+          Split a payment between two accounts. If you don't have any Algos to test with, use the TestNet Faucet in the
+          Tools menu to add Algos to your
+          TestNet account.
+        </p>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Sender Account</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="sender">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="columns">
+          <div class="column is-10">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Receiver #1</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="receiver1">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="column is-2">
+            <div class="field is-horizontal">
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" type="number" value="50"
+                        min="0" max="100" id="percent1"
+                        onchange="balancePercentageFields(this.id);">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-percent"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="columns">
+          <div class="column is-10">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Receiver #2</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <div class="select is-fullwidth">
+                      <select id="receiver2">
+                        <option value="-1">No accounts available</option>
+                      </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="column is-2">
+            <div class="field is-horizontal">
+              <div class="field-body">
+                <div class="field">
+                  <div class="control is-expanded has-icons-left">
+                    <input class="input" type="number" value="50"
+                        min="0" max="100" id="percent2"
+                        onchange="balancePercentageFields(this.id);">
+                    <div class="icon is-small is-left">
+                      <i class="fas fa-percent"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label">Amount to Split</label>
+          </div>
+          <div class="field-body">
+            <div class="field has-addons">
+              <div class="control is-expanded has-icons-left">
+                <input class="input" id="amount" placeholder="µAlgos"
+                  onchange="updateMicroAlgoConverter(this.value);">
+                <div class="icon is-small is-left">
+                  <i class="fas fa-coins"></i>
+                </div>
+              </div>
+              <p class="control">
+                <a class="button is-static" id="microToAlgo">
+                  0 Algos
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+        <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
+      </div>
+  </section>
+
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <span id="processingMessage">Processing, please wait...</span>
+        <progress class="progress is-small is-primary mt-1" max="100">15%</progress>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("load", function () {
+      checkForAlgosigner();
+    });
+
+    function checkForAlgosigner() {
+      if (typeof AlgoSigner !== 'undefined') {
+        document.getElementById('divCheck').classList.add("is-hidden");
+        document.getElementById('divTransaction').classList.remove("is-hidden");
+      } else {
+        document.getElementById('divCheck').classList.remove("is-hidden");
+        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
+      };
+    }
+
+    function fetchAccounts() {
+      renderLoadingSelect(document.getElementById('sender'));
+      renderLoadingSelect(document.getElementById('receiver1'));
+      renderLoadingSelect(document.getElementById('receiver2'));
+
+      AlgoSigner.connect()
+        .then(() => AlgoSigner.accounts({
+          ledger: 'TestNet'
+        }))
+        .then((acctData) => {
+          renderAccountSelect(document.getElementById('sender'), acctData);
+          renderAccountSelect(document.getElementById('receiver1'), acctData);
+          renderAccountSelect(document.getElementById('receiver2'), acctData);
+        })
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+        });
+    }
+
+    function executeSplitTransaction() {
+      showProcessingModal();
+
+      let sender = document.getElementById('sender').value;
+      let recipient1 = document.getElementById('receiver1').value;
+      let recipient2 = document.getElementById('receiver2').value;
+      let ratio1 = document.getElementById('percent1').value;
+      let ratio2 = document.getElementById('percent2').value;
+      let amount = document.getElementById('amount').value;
+      let contractAddress = null;
+
+      document.getElementById('processingMessage').innerHTML = "Creating split contract...";
+
+      fetch(`createSplitContract?sender=${sender}&recipient1=${recipient1}&ratio1=${ratio1}&recipient2=${recipient2}&ratio2=${ratio2}`)
+        .then((d) => d.json())
+        .then((d) => {
+          contractAddress = d.contractAddress;
+          console.log('contractAddress: ' + contractAddress);
+        })
+        // connect to AlgoSigner
+        .then(AlgoSigner.connect())
+        .then(() => {
+          document.getElementById('processingMessage').innerHTML = "Funding contract...";
+        })
+        // get the current params
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // send payment to be split + minimum & execution fees
+        .then((txParams) => AlgoSigner.sign({
+          from: sender,
+          to: contractAddress,
+          amount: +amount + 100000 + 2000,
+          note: 'Payment to split',
+          type: 'pay',
+          fee: txParams['fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        .then((tx) => waitForAlgosignerConfirmation(tx))
+        .then((d) => {
+          document.getElementById('processingMessage').innerHTML = "Executing contract...";
+        })
+        // after the contract funding is confirmed, execute the split
+        .then(() => fetch(`executeSplitContract?address=${contractAddress}&amount=${amount}`))
+        .then((d) => d.json())
+        .then((d) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+            " was successfully sent.";
+          document.getElementById('successDialog').classList.remove("is-hidden");
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+          hideProcessingModal();
+        });
+    }
+
+    async function waitForAlgosignerConfirmation(tx) {
+      console.log('waiting for confirmation');
+      let status = await AlgoSigner.algod({
+        ledger: 'TestNet',
+        path: '/v2/transactions/pending/' + tx.txId
+      });
+
+      while(true) {
+        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
+          //Got the completed Transaction
+          console.log('Transaction confirmed in round ' + status['confirmed-round']);
+          break;
+        }
+
+        status = await AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/pending/' + tx.txId
+        });
+      }
+    }
+
+    function balancePercentageFields(senderId) {
+      var percent1Element = document.getElementById('percent1');
+      var percent2Element = document.getElementById('percent2');
+
+      if(senderId == "percent1") {
+        percent1Element.value = Math.max(Math.min(percent1Element.value, 100), 0);
+        percent2Element.value = 100 - percent1.value;
+      } else if(senderId == "percent2") {
+        percent2Element.value = Math.max(Math.min(percent2Element.value, 100), 0);
+        percent1Element.value = 100 - percent2.value;
+      }
+    }
+
+    function updateMicroAlgoConverter(microAlgoValue) {
+      document.getElementById('microToAlgo').innerHTML = `${microAlgosToAlgos(microAlgoValue)} Algos`;
+    }
+
+    function microAlgosToAlgos(numMicroAlgos) {
+      return (numMicroAlgos / 1000000).toFixed(6);
+    }
+
+    function showProcessingModal() {
+      document.getElementById('processingModal').classList.add("is-active");
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+    }
+
+    function hideProcessingModal() {
+      document.getElementById('processingModal').classList.remove("is-active");
+      document.body.style.overflow = "auto";
+      document.body.style.position = "";
+    }
+
+    document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
+    document.getElementById('btnSignAndSend').addEventListener('click', executeSplitTransaction);
+  </script>
+  <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <script src="static/js/site.js"></script>
+</body>
+</html>
