@@ -120,158 +120,161 @@
         </div>
       </article>
 
-      <div id="divCheck" class="is-hidden">
+      <div id="divAlgoSignerCheck" class="is-hidden">
         <h1 class="title">AlgoSigner not installed!</h1>
         <p class="subtitle">
           You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
         </p>
       </div>
 
-      <div id="stepCreate" class="is-hidden">
-        <h1 class="title">Hash Time Lock - Safe Deposit Demo</h1>
+      <div id="divDemoBlock" class="is-hidden">
+        <div id="stepCreate">
+          <h1 class="title">Hash Time Lock - Safe Deposit Demo</h1>
 
-        <div class="box">
-          <h4 class="title is-4">Step 1</h1>
-          <p class="subtitle">
-            Create a password-protected payment. You'll receive a passphrase for this payment when you press the "Make Safe Deposit" button.
-          </p>
-    
-          <div class="columns">
-            <div class="column">
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">From</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <div class="control is-expanded has-icons-left">
-                      <div class="select is-fullwidth">
-                        <select id="from">
-                          <option value="-1">No accounts available</option>
-                        </select>
+          <div class="box">
+            <h4 class="title is-4">Step 1</h4>
+              <p class="subtitle">
+                Create a password-protected payment. You'll receive a passphrase for this payment when you press the
+                "Make Safe Deposit" button.
+              </p>
+
+              <div class="columns">
+                <div class="column">
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">From</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <div class="control is-expanded has-icons-left">
+                          <div class="select is-fullwidth">
+                            <select id="from">
+                              <option value="-1">No accounts available</option>
+                            </select>
+                          </div>
+                          <div class="icon is-small is-left">
+                            <i class="fas fa-wallet"></i>
+                          </div>
+                        </div>
                       </div>
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">To</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <div class="control is-expanded has-icons-left">
+                          <div class="select is-fullwidth">
+                            <select id="to">
+                              <option value="-1">No accounts available</option>
+                            </select>
+                          </div>
+                          <div class="icon is-small is-left">
+                            <i class="fas fa-wallet"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">Deposit</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field has-addons">
+                        <div class="control is-expanded has-icons-left">
+                          <input class="input" id="amount" placeholder="µAlgos"
+                            onchange="updateMicroAlgoConverter(this, this.value);">
+                          <div class="icon is-small is-left">
+                            <i class="fas fa-coins"></i>
+                          </div>
+                        </div>
+                        <p class="control">
+                          <a class="button is-static" id="microToAlgo">
+                            0 Algos
+                          </a>
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">To</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <div class="control is-expanded has-icons-left">
-                      <div class="select is-fullwidth">
-                        <select id="to">
-                          <option value="-1">No accounts available</option>
-                        </select>
-                      </div>
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-wallet"></i>
-                      </div>
-                    </div>
-                  </div>
+              <div class="columns">
+                <div class="column">
+                  <button class="button is-dark is-fullwidth" id="btnMakeDeposit">Make Safe Deposit</button>
                 </div>
               </div>
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">Deposit</label>
-                </div>
-                <div class="field-body">
-                  <div class="field has-addons">
-                    <div class="control is-expanded has-icons-left">
-                      <input class="input" id="amount" placeholder="µAlgos"
-                        onchange="updateMicroAlgoConverter(this.value);">
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-coins"></i>
-                      </div>
-                    </div>
-                    <p class="control">
-                      <a class="button is-static" id="microToAlgo">
-                        0 Algos
-                      </a>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
-          <div class="columns">
-            <div class="column">
-              <button class="button is-dark is-fullwidth" id="btnMakeDeposit">Make Safe Deposit</button>
-            </div>
-          </div>
-        </div>
-        
-        <div id="stepClaim" class="box is-hidden">
-          <h4 class="title is-4">Step 3</h1>
-          <p class="subtitle">
-            Claim the deposit using the correct password
-          </p>
-    
-          <div class="columns">
-            <div class="column">
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">Contract Address</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <div class="control is-expanded has-icons-left">
-                      <div class="select is-fullwidth">
-                        <select id="contract"
-                        onchange="setInfoForHTLC();">
-                        </select>
+
+          <div id="stepClaim" class="box is-hidden">
+            <h4 class="title is-4">Step 2</h4>
+              <p class="subtitle">
+                Claim the deposit using the correct password
+              </p>
+
+              <div class="columns">
+                <div class="column">
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">Contract Address</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <div class="control is-expanded has-icons-left">
+                          <div class="select is-fullwidth">
+                            <select id="contract" onchange="setInfoForHTLC();">
+                            </select>
+                          </div>
+                          <div class="icon is-small is-left">
+                            <i class="fas fa-wallet"></i>
+                          </div>
+                        </div>
                       </div>
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-wallet"></i>
+                    </div>
+                  </div>
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">Recipient</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <div class="control is-expanded has-icons-left">
+                          <input class="input" type="text" id="closeremainder" disabled>
+                          <div class="icon is-small is-left">
+                            <i class="fas fa-wallet"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">Passphrase</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field">
+                        <div class="control is-expanded has-icons-left">
+                          <input id="passphrase" class="input" type="text">
+                          <div class="icon is-small is-left">
+                            <i class="fas fa-lock"></i>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">Recipient</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <div class="control is-expanded has-icons-left">
-                      <input class="input" type="text" id="closeremainder" disabled>
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-wallet"></i>
-                      </div>
-                    </div>
-                  </div>
+              <div class="columns">
+                <div class="column">
+                  <button class="button is-dark is-fullwidth" id="btnUnlockFunds">Unlock Funds</button>
                 </div>
               </div>
-              <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                  <label class="label">Passphrase</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <div class="control is-expanded has-icons-left">
-                      <input id="passphrase" class="input" type="text">
-                      <div class="icon is-small is-left">
-                        <i class="fas fa-lock"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column">
-              <button class="button is-dark is-fullwidth" id="btnUnlockFunds">Unlock Funds</button>
-            </div>
           </div>
         </div>
       </div>
+
   </section>
 
   <div class="modal" id="processingModal">
@@ -291,16 +294,6 @@
     window.addEventListener("load", function () {
       checkForAlgosigner();
     });
-
-    function checkForAlgosigner() {
-      if (typeof AlgoSigner !== 'undefined') {
-        document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('stepCreate').classList.remove("is-hidden");
-      } else {
-        document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
-      };
-    }
 
     function fetchAccounts() {
       let selFrom = document.getElementById('from');
@@ -335,62 +328,62 @@
       let currentContractAddress = null;
 
       document.getElementById('processingMessage').innerHTML = "Creating hash time lock contract...";
-    
-      fetch(`createHashTimeLockContract?owner=${from}&receiver=${to}`)
-      .then((d) => d.json())
-      .then((d) => {
-        contractsDict[d.contractAddress] = to;
-        passphraseDict[d.contractAddress] = d.passphrase;
 
-        appendSelectOption(selContract, d.contractAddress, d.contractAddress);
-        currentContractAddress = d.contractAddress;
-        document.getElementById('closeremainder').value = to;
-        document.getElementById('passphrase').value = d.passphrase;
-      })
-      // connect to AlgoSigner
-      .then(AlgoSigner.connect())
-      .then(() => {
-        document.getElementById('processingMessage').innerHTML = "Funding contract...";
-      })
-      // get the current params
-      .then(() => AlgoSigner.algod({
-        ledger: 'TestNet',
-        path: '/v2/transactions/params'
-      }))
-      // add funds to contract + minimum & execution fees
-      .then((txParams) => AlgoSigner.sign({
-        from: from,
-        to: currentContractAddress,
-        amount: +amount + 100000 + 1000,
-        note: 'HTLC Funding Transaction',
-        type: 'pay',
-        fee: txParams['fee'],
-        firstRound: txParams['last-round'],
-        lastRound: txParams['last-round'] + 1000,
-        genesisID: txParams['genesis-id'],
-        genesisHash: txParams['genesis-hash'],
-        flatFee: true
-      }))
-      .then((signedTx) => AlgoSigner.send({
-        ledger: 'TestNet',
-        tx: signedTx.blob
-      }))
-      .then((tx) => waitForAlgosignerConfirmation(tx))
-      .then((tx) => {
-        // was successful
-        document.getElementById('successMessage').innerHTML = "The transaction with TxID " + tx.txId +
+      fetch(`createHashTimeLockContract?owner=${from}&receiver=${to}`)
+        .then((d) => d.json())
+        .then((d) => {
+          contractsDict[d.contractAddress] = to;
+          passphraseDict[d.contractAddress] = d.passphrase;
+
+          appendSelectOption(selContract, d.contractAddress, d.contractAddress);
+          currentContractAddress = d.contractAddress;
+          document.getElementById('closeremainder').value = to;
+          document.getElementById('passphrase').value = d.passphrase;
+        })
+        // connect to AlgoSigner
+        .then(AlgoSigner.connect())
+        .then(() => {
+          document.getElementById('processingMessage').innerHTML = "Funding contract...";
+        })
+        // get the current params
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // add funds to contract + minimum & execution fees
+        .then((txParams) => AlgoSigner.sign({
+          from: from,
+          to: currentContractAddress,
+          amount: +amount + 100000 + 1000,
+          note: 'HTLC Funding Transaction',
+          type: 'pay',
+          fee: txParams['fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        .then((tx) => waitForAlgosignerConfirmation(tx))
+        .then((tx) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + tx.txId +
             " was successfully sent.";
 
-        document.getElementById('successDialog').classList.remove("is-hidden");
-        document.getElementById('stepClaim').classList.remove("is-hidden");
-        hideProcessingModal();
-      })
-      .catch((e) => {
-        console.error(e);
-        document.getElementById('errorMessage').innerHTML = e.message;
-        document.getElementById('errorDialog').classList.remove("is-hidden");
-        hideProcessingModal();
-      });
+          document.getElementById('successDialog').classList.remove("is-hidden");
+          document.getElementById('stepClaim').classList.remove("is-hidden");
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+          hideProcessingModal();
+        });
     }
 
     function unlockHtlc() {
@@ -409,21 +402,21 @@
       console.log(preb64);
 
       fetch(`unlockHashTimeLockContract?address=${contract}&closeRemainderTo=${closeRemainderTo}&preb64=${preb64}`)
-      .then((d) => d.json())
-      .then((d) => {
-        // was successful
-        document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+        .then((d) => d.json())
+        .then((d) => {
+          // was successful
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
             " was successfully sent.";
 
-        document.getElementById('successDialog').classList.remove("is-hidden");
-        hideProcessingModal();
-      })
-      .catch((e) => {
-        console.error(e);
-        document.getElementById('errorMessage').innerHTML = e.message;
-        document.getElementById('errorDialog').classList.remove("is-hidden");
-        hideProcessingModal();
-      });
+          document.getElementById('successDialog').classList.remove("is-hidden");
+          hideProcessingModal();
+        })
+        .catch((e) => {
+          console.error(e);
+          document.getElementById('errorMessage').innerHTML = e.message;
+          document.getElementById('errorDialog').classList.remove("is-hidden");
+          hideProcessingModal();
+        });
     }
 
     function setInfoForHTLC() {
@@ -435,55 +428,13 @@
       passphrase.value = passphraseDict[contract];
     }
 
-    async function waitForAlgosignerConfirmation(tx) {
-      console.log('waiting for confirmation');
-      let status = await AlgoSigner.algod({
-        ledger: 'TestNet',
-        path: '/v2/transactions/pending/' + tx.txId
-      });
-
-      while(true) {
-        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
-          //Got the completed Transaction
-          console.log('Transaction confirmed in round ' + status['confirmed-round']);
-          break;
-        }
-
-        status = await AlgoSigner.algod({
-          ledger: 'TestNet',
-          path: '/v2/transactions/pending/' + tx.txId
-        });
-      }
-      
-      return tx;
-    }
-
-    function updateMicroAlgoConverter(microAlgoValue) {
-      document.getElementById('microToAlgo').innerHTML = `${microAlgosToAlgos(microAlgoValue)} Algos`;
-    }
-
-    function microAlgosToAlgos(numMicroAlgos) {
-      return (numMicroAlgos / 1000000).toFixed(6);
-    }
-
-    function showProcessingModal() {
-      document.getElementById('processingModal').classList.add("is-active");
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-    }
-
-    function hideProcessingModal() {
-      document.getElementById('processingModal').classList.remove("is-active");
-      document.body.style.overflow = "auto";
-      document.body.style.position = "";
-    }
-
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnMakeDeposit').addEventListener('click', createHtlc);
     document.getElementById('btnUnlockFunds').addEventListener('click', unlockHtlc);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
 </body>
 
 </html>

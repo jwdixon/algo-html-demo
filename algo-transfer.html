@@ -110,14 +110,14 @@
         </div>
       </article>
 
-      <div id="divCheck" class="is-hidden">
+      <div id="divAlgoSignerCheck" class="is-hidden">
         <h1 class="title">AlgoSigner not installed!</h1>
         <p class="subtitle">
           You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
         </p>
       </div>
 
-      <div id="divTransaction" class="is-hidden">
+      <div id="divDemoBlock" class="is-hidden">
         <h1 class="title">Transfer Algos</h1>
 
         <p class="subtitle">
@@ -173,7 +173,7 @@
                 <div class="field has-addons">
                   <div class="control is-expanded has-icons-left">
                     <input class="input" id="amount" placeholder="µAlgos"
-                      onchange="updateMicroAlgoConverter(this.value);">
+                      onchange="updateMicroAlgoConverter(this, this.value);">
                     <div class="icon is-small is-left">
                       <i class="fas fa-coins"></i>
                     </div>
@@ -205,21 +205,12 @@
         </div>
         <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
       </div>
+
   </section>
   <script>
     window.addEventListener("load", function () {
       checkForAlgosigner();
     });
-
-    function checkForAlgosigner() {
-      if (typeof AlgoSigner !== 'undefined') {
-        document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('divTransaction').classList.remove("is-hidden");
-      } else {
-        document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
-      };
-    }
 
     function fetchAccounts() {
       renderLoadingSelect(document.getElementById('from'));
@@ -287,40 +278,12 @@
         });
     }
 
-    async function waitForAlgosignerConfirmation(tx) {
-      console.log('waiting for confirmation');
-      let status = await AlgoSigner.algod({
-        ledger: 'TestNet',
-        path: '/v2/transactions/pending/' + tx.txId
-      });
-
-      while(true) {
-        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
-          //Got the completed Transaction
-          console.log('Transaction confirmed in round ' + status['confirmed-round']);
-          break;
-        }
-
-        status = await AlgoSigner.algod({
-          ledger: 'TestNet',
-          path: '/v2/transactions/pending/' + tx.txId
-        });
-      }
-    }
-
-    function updateMicroAlgoConverter(microAlgoValue) {
-      document.getElementById('microToAlgo').innerHTML = `${microAlgosToAlgos(microAlgoValue)} Algos`;
-    }
-
-    function microAlgosToAlgos(numMicroAlgos) {
-      return (numMicroAlgos / 1000000).toFixed(6);
-    }
-
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
 </body>
 
 </html>

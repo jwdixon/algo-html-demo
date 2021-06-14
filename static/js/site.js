@@ -85,3 +85,23 @@ function renderAccountSelect(elem, data) {
                           -1);
   }
 }
+
+function showProcessingModal() {
+  document.getElementById('processingModal').classList.add("is-active");
+  document.body.style.overflow = "hidden";
+  document.body.style.position = "fixed";
+}
+
+function hideProcessingModal() {
+  document.getElementById('processingModal').classList.remove("is-active");
+  document.body.style.overflow = "auto";
+  document.body.style.position = "";
+}
+
+function updateMicroAlgoConverter(microAlgoElement, microAlgoValue) {
+  microAlgoElement.innerHTML = `${microAlgosToAlgos(microAlgoValue)} Algos`;
+}
+
+function microAlgosToAlgos(numMicroAlgos) {
+  return (numMicroAlgos / 1000000).toFixed(6);
+}

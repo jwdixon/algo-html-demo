@@ -110,14 +110,14 @@
         </div>
       </article>
 
-      <div id="divCheck" class="is-hidden">
+      <div id="divAlgoSignerCheck" class="is-hidden">
         <h1 class="title">AlgoSigner not installed!</h1>
         <p class="subtitle">
           You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
         </p>
       </div>
 
-      <div id="divCreateAsset" class="is-hidden">
+      <div id="divDemoBlock" class="is-hidden">
         <h1 class="title">Create an Asset</h1>
 
         <p class="subtitle">
@@ -230,16 +230,6 @@
       checkForAlgosigner();
     });
 
-    function checkForAlgosigner() {
-      if (typeof AlgoSigner !== 'undefined') {
-        document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('divCreateAsset').classList.remove("is-hidden");
-      } else {
-        document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
-      };
-    }
-
     function fetchAccounts() {
       let selFrom = document.getElementById('from');
 
@@ -308,32 +298,12 @@
         });
     }
 
-    async function waitForAlgosignerConfirmation(tx) {
-      console.log('waiting for confirmation');
-      let status = await AlgoSigner.algod({
-        ledger: 'TestNet',
-        path: '/v2/transactions/pending/' + tx.txId
-      });
-
-      while(true) {
-        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
-          //Got the completed Transaction
-          console.log('Transaction confirmed in round ' + status['confirmed-round']);
-          break;
-        }
-
-        status = await AlgoSigner.algod({
-          ledger: 'TestNet',
-          path: '/v2/transactions/pending/' + tx.txId
-        });
-      }
-    }
-
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnSignAndSend').addEventListener('click', signAndSendTransaction);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
 </body>
 
 </html>

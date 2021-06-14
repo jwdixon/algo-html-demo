@@ -110,14 +110,14 @@
         </div>
       </article>
 
-      <div id="divCheck" class="is-hidden">
+      <div id="divAlgoSignerCheck" class="is-hidden">
         <h1 class="title">AlgoSigner not installed!</h1>
         <p class="subtitle">
           You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
         </p>
       </div>
 
-      <div id="divTransaction" class="is-hidden">
+      <div id="divDemoBlock" class="is-hidden">
         <h1 class="title">Create an Atomic Transfer</h1>
 
         <p class="subtitle">
@@ -281,16 +281,6 @@
     window.addEventListener("load", function () {
       checkForAlgosigner();
     });
-
-    function checkForAlgosigner() {
-      if (typeof AlgoSigner !== 'undefined') {
-        document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('divTransaction').classList.remove("is-hidden");
-      } else {
-        document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
-      };
-    }
 
     function fetchAccounts() {
       let selFromLeft = document.getElementById('from_left');
@@ -461,27 +451,6 @@
         });
     }
 
-    async function waitForAlgosignerConfirmation(tx) {
-      console.log('waiting for confirmation');
-      let status = await AlgoSigner.algod({
-        ledger: 'TestNet',
-        path: '/v2/transactions/pending/' + tx.txId
-      });
-
-      while(true) {
-        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
-          //Got the completed Transaction
-          console.log('Transaction confirmed in round ' + status['confirmed-round']);
-          break;
-        }
-
-        status = await AlgoSigner.algod({
-          ledger: 'TestNet',
-          path: '/v2/transactions/pending/' + tx.txId
-        });
-      }
-    }
-
     document.getElementById('from_left').addEventListener('change', function () {
       let selAssetLeft = document.getElementById('asset_left');
 
@@ -504,6 +473,7 @@
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/algosdk.min.js"></script>
   <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
 </body>
 
 </html>

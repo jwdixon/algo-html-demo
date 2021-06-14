@@ -86,11 +86,84 @@
 
   <section class="section">
     <div class="container">
-      <h1 class="title">Welcome!</h1>
+      <h2 class="title is-2">Welcome!</h2>
 
-      <p class="subtitle">
-        Welcome to the Algorand Smart Contract demo!
+      <p class="subtitle pb-4">
+        Welcome to the Algorand Features And Smart Contracts GUI Demo!
       </p>
+
+      <h2 class="title">Introduction</h2>
+      <div class="box">
+        <p class="pb-2">Algorand’s technology enables a set of high performing Layer-1 blockchains that provide security, scalability, complete transaction finality, built in privacy, Co-Chains, and advanced smart contracts that are essential in a FutureFi world.</p>
+        <p class="pb-2">This demo was built to communicate these advanced features in an easy-to-understand way.</p>
+        <p class="pb-2"><strong>Before you begin, you should have the <a target="_blank" href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">AlgoSigner Google Chrome extension</a> installed, as this demo makes extensive use of it.</strong> 
+          You should also make a couple of wallets on Algorand <strong>TestNet</strong> and use the 
+          <a target="_blank" href="https://testnet.algoexplorer.io/dispenser">TestNet ALGO Faucet</a> to generate Algos for them, as these exercises demonstrate how to move assets between two or more addresses.</p>
+      </div>
+
+      <h2 class="title">Transactions</h2>
+      <div class="columns is-multiline">
+        <div class="column is-half">
+          <a href="algo-transfer.html">
+            <div class="box">
+              <h4 class="title is-4">ALGO Transfer</h4>
+              <p>Transfer ALGO from one Algorand wallet address to another.</p>
+            </div>
+          </a>
+        </div>
+        <div class="column is-half">
+          <a href="asset-creation.html">
+            <div class="box">
+              <h4 class="title is-4">Asset Creation</h4>
+              <p>Create an Algorand Standard Asset (ASA) on the Algorand blockchain.</p>
+            </div>
+          </a>
+        </div>
+        <div class="column is-half">
+          <a href="asa-transfer.html">
+            <div class="box">
+              <h4 class="title is-4">Asset Transfer</h4>
+              <p>Transfer ASAs from one Algorand wallet address to another.</p>
+            </div>
+          </a>
+        </div>
+        <div class="column is-half">
+          <a href="atomic-transfer.html">
+            <div class="box">
+              <h4 class="title is-4">Atomic Transfer</h4>
+              <p>Group two transactions together to be executed atomically - either both transactions succeed or they both fail.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+      <h2 class="title">Smart Contracts</h2>
+      <div class="columns">
+        <div class="column">
+          <a href="limit-order.html">
+            <div class="box">
+              <h4 class="title is-4">Limit Order</h4>
+              <p>A Limit Order is a Smart Contract that only pays out funds when a limit amount is reached in the contract logic.</p>
+            </div>
+          </a>
+        </div>
+        <div class="column">
+          <a href="hash-time-lock.html">
+            <div class="box">
+              <h4 class="title is-5">Hash Time Lock Contract</h4>
+              <p>A Hash Time Lock Contract is a Smart Contract that only pays out funds when a certain "preimage" is supplied to it. 
+                Think of a preimage as a password or passphrase you need to unlock the funds.</p>
+            </div>
+          </a>
+        </div>
+        <div class="column">
+          <a href="split-contract.html">
+            <div class="box">
+              <h4 class="title is-4">Split Contract</h4>
+              <p>A Split Contract is a Smart Contract that can be used to disburse a payment amount to two wallets in defined proportions.</p>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
   </section>
   <script>

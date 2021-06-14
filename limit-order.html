@@ -120,14 +120,14 @@
         </div>
       </article>
 
-      <div id="divCheck" class="is-hidden">
+      <div id="divAlgoSignerCheck" class="is-hidden">
         <h1 class="title">AlgoSigner not installed!</h1>
         <p class="subtitle">
           You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
         </p>
       </div>
 
-      <div id="divTransaction" class="is-hidden">
+      <div id="divDemoBlock" class="is-hidden">
         <h1 class="title">Limit Order - Bubblegum Demo</h1>
 
         <p class="subtitle">
@@ -177,16 +177,6 @@
     window.addEventListener("load", function () {
       checkForAlgosigner();
     });
-
-    function checkForAlgosigner() {
-      if (typeof AlgoSigner !== 'undefined') {
-        document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('divTransaction').classList.remove("is-hidden");
-      } else {
-        document.getElementById('divCheck').classList.remove("is-hidden");
-        document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
-      };
-    }
 
     function fetchAccounts() {
       renderLoadingSelect(document.getElementById('payacct'));
@@ -293,44 +283,12 @@
         });
     }
 
-    async function waitForAlgosignerConfirmation(tx) {
-      console.log('waiting for confirmation');
-      let status = await AlgoSigner.algod({
-        ledger: 'TestNet',
-        path: '/v2/transactions/pending/' + tx.txId
-      });
-
-      while(true) {
-        if(status['confirmed-round'] !== null && status['confirmed-round'] > 0) {
-          //Got the completed Transaction
-          console.log('Transaction confirmed in round ' + status['confirmed-round']);
-          break;
-        }
-
-        status = await AlgoSigner.algod({
-          ledger: 'TestNet',
-          path: '/v2/transactions/pending/' + tx.txId
-        });
-      }
-    }
-
-    function showProcessingModal() {
-      document.getElementById('processingModal').classList.add("is-active");
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-    }
-
-    function hideProcessingModal() {
-      document.getElementById('processingModal').classList.remove("is-active");
-      document.body.style.overflow = "auto";
-      document.body.style.position = "";
-    }
-
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnSignAndSend').addEventListener('click', executeBubblegumTransaction);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>
+  <script src="static/js/algosignerutils.js"></script>
 </body>
 
 </html>
