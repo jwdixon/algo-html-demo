@@ -127,13 +127,13 @@
         </p>
       </div>
 
-      <div id="divTransaction" class="is-hidden">
+      <div id="stepCreate" class="is-hidden">
         <h1 class="title">Hash Time Lock - Safe Deposit Demo</h1>
 
         <div class="box">
           <h4 class="title is-4">Step 1</h1>
           <p class="subtitle">
-            Create a password-protected deposit
+            Create a password-protected payment. You'll receive a passphrase for this payment when you press the "Make Safe Deposit" button.
           </p>
     
           <div class="columns">
@@ -183,7 +183,7 @@
                 <div class="field-body">
                   <div class="field has-addons">
                     <div class="control is-expanded has-icons-left">
-                      <input class="input" id="algoamount" placeholder="µAlgos"
+                      <input class="input" id="amount" placeholder="µAlgos"
                         onchange="updateMicroAlgoConverter(this.value);">
                       <div class="icon is-small is-left">
                         <i class="fas fa-coins"></i>
@@ -197,6 +197,57 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column">
+              <button class="button is-dark is-fullwidth" id="btnMakeDeposit">Make Safe Deposit</button>
+            </div>
+          </div>
+        </div>
+        
+        <div id="stepClaim" class="box is-hidden">
+          <h4 class="title is-4">Step 3</h1>
+          <p class="subtitle">
+            Claim the deposit using the correct password
+          </p>
+    
+          <div class="columns">
+            <div class="column">
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Contract Address</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control is-expanded has-icons-left">
+                      <div class="select is-fullwidth">
+                        <select id="contract"
+                        onchange="setInfoForHTLC();">
+                        </select>
+                      </div>
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-wallet"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Recipient</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control is-expanded has-icons-left">
+                      <input class="input" type="text" id="closeremainder" disabled>
+                      <div class="icon is-small is-left">
+                        <i class="fas fa-wallet"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="field is-horizontal">
                 <div class="field-label is-normal">
                   <label class="label">Passphrase</label>
@@ -204,7 +255,7 @@
                 <div class="field-body">
                   <div class="field">
                     <div class="control is-expanded has-icons-left">
-                      <input class="input" type="text">
+                      <input id="passphrase" class="input" type="text">
                       <div class="icon is-small is-left">
                         <i class="fas fa-lock"></i>
                       </div>
@@ -216,16 +267,9 @@
           </div>
           <div class="columns">
             <div class="column">
-              <button class="button is-dark is-fullwidth" id="btnMakeDeposit">Make Safe Deposit</button>
+              <button class="button is-dark is-fullwidth" id="btnUnlockFunds">Unlock Funds</button>
             </div>
           </div>
-        </div>
-        
-        <div class="box">
-          <h4 class="title is-4">Step 2</h1>
-          <p class="subtitle">
-            Claim the deposit using the correct password
-          </p>
         </div>
       </div>
   </section>
@@ -241,6 +285,9 @@
   </div>
 
   <script>
+    var contractsDict = {};
+    var passphraseDict = {};
+
     window.addEventListener("load", function () {
       checkForAlgosigner();
     });
@@ -248,7 +295,7 @@
     function checkForAlgosigner() {
       if (typeof AlgoSigner !== 'undefined') {
         document.getElementById('divCheck').classList.add("is-hidden");
-        document.getElementById('divTransaction').classList.remove("is-hidden");
+        document.getElementById('stepCreate').classList.remove("is-hidden");
       } else {
         document.getElementById('divCheck').classList.remove("is-hidden");
         document.getElementById('btnRefreshAccounts').classList.add("is-hidden");
@@ -258,11 +305,9 @@
     function fetchAccounts() {
       let selFrom = document.getElementById('from');
       let selTo = document.getElementById('to');
-      let selAsset = document.getElementById('asset');
 
       renderLoadingSelect(selFrom);
       renderLoadingSelect(selTo);
-      renderLoadingSelect(selAsset);
 
       AlgoSigner.connect()
         .then(() => AlgoSigner.accounts({
@@ -272,43 +317,11 @@
           renderAccountSelect(selFrom, acctData);
           renderAccountSelect(selTo, acctData);
         })
-        .then(() => fetchAssets(selFrom.value))
-        .then((assetData) => renderAssetSelect(selAsset, assetData))
         .catch((e) => {
           console.error(e);
           document.getElementById('errorMessage').innerHTML = e.message;
           document.getElementById('errorDialog').classList.remove("is-hidden");
         });
-    }
-
-    function fetchAssets(account) {
-      if (account != -1) {
-        let assetData = [];
-
-        return AlgoSigner.algod({
-            ledger: 'TestNet',
-            path: `/v2/accounts/${account}`
-          })
-          .then((accountData) => {
-            return accountData.assets.reduce(
-              (promise, asset) => promise.then(() =>
-                AlgoSigner.indexer({
-                  ledger: 'TestNet',
-                  path: `/v2/assets/${asset['asset-id']}`
-                })
-                .then((d) => assetData.push(d))
-              ),
-              Promise.resolve());
-          })
-          .then(() => assetData)
-          .catch((e) => {
-            console.error(e);
-            document.getElementById('errorMessage').innerHTML = e.message;
-            document.getElementById('errorDialog').classList.remove("is-hidden");
-          });
-      } else {
-        return [];
-      }
     }
 
     function createHtlc() {
@@ -316,23 +329,110 @@
 
       let from = document.getElementById('from').value;
       let to = document.getElementById('to').value;
+      let selContract = document.getElementById('contract');
+      let amount = document.getElementById('amount').value;
+
+      let currentContractAddress = null;
 
       document.getElementById('processingMessage').innerHTML = "Creating hash time lock contract...";
     
       fetch(`createHashTimeLockContract?owner=${from}&receiver=${to}`)
+      .then((d) => d.json())
       .then((d) => {
-          // was successful
-          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+        contractsDict[d.contractAddress] = to;
+        passphraseDict[d.contractAddress] = d.passphrase;
+
+        appendSelectOption(selContract, d.contractAddress, d.contractAddress);
+        currentContractAddress = d.contractAddress;
+        document.getElementById('closeremainder').value = to;
+        document.getElementById('passphrase').value = d.passphrase;
+      })
+      // connect to AlgoSigner
+      .then(AlgoSigner.connect())
+      .then(() => {
+        document.getElementById('processingMessage').innerHTML = "Funding contract...";
+      })
+      // get the current params
+      .then(() => AlgoSigner.algod({
+        ledger: 'TestNet',
+        path: '/v2/transactions/params'
+      }))
+      // add funds to contract + minimum & execution fees
+      .then((txParams) => AlgoSigner.sign({
+        from: from,
+        to: currentContractAddress,
+        amount: +amount + 100000 + 1000,
+        note: 'HTLC Funding Transaction',
+        type: 'pay',
+        fee: txParams['fee'],
+        firstRound: txParams['last-round'],
+        lastRound: txParams['last-round'] + 1000,
+        genesisID: txParams['genesis-id'],
+        genesisHash: txParams['genesis-hash'],
+        flatFee: true
+      }))
+      .then((signedTx) => AlgoSigner.send({
+        ledger: 'TestNet',
+        tx: signedTx.blob
+      }))
+      .then((tx) => waitForAlgosignerConfirmation(tx))
+      .then((tx) => {
+        // was successful
+        document.getElementById('successMessage').innerHTML = "The transaction with TxID " + tx.txId +
             " was successfully sent.";
-          document.getElementById('successDialog').classList.remove("is-hidden");
-          hideProcessingModal();
-        })
-        .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
-          hideProcessingModal();
-        });
+
+        document.getElementById('successDialog').classList.remove("is-hidden");
+        document.getElementById('stepClaim').classList.remove("is-hidden");
+        hideProcessingModal();
+      })
+      .catch((e) => {
+        console.error(e);
+        document.getElementById('errorMessage').innerHTML = e.message;
+        document.getElementById('errorDialog').classList.remove("is-hidden");
+        hideProcessingModal();
+      });
+    }
+
+    function unlockHtlc() {
+      showProcessingModal();
+
+      document.getElementById('processingMessage').innerHTML = "Trying to unlock contract...";
+
+      let contract = document.getElementById('contract').value;
+      let closeRemainderTo = document.getElementById('closeremainder').value;
+      let passphrase = document.getElementById('passphrase').value;
+
+      let preb64 = btoa(passphrase);
+
+      console.log(contract);
+      console.log(passphrase);
+      console.log(preb64);
+
+      fetch(`unlockHashTimeLockContract?address=${contract}&closeRemainderTo=${closeRemainderTo}&preb64=${preb64}`)
+      .then((d) => d.json())
+      .then((d) => {
+        // was successful
+        document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+            " was successfully sent.";
+
+        document.getElementById('successDialog').classList.remove("is-hidden");
+        hideProcessingModal();
+      })
+      .catch((e) => {
+        console.error(e);
+        document.getElementById('errorMessage').innerHTML = e.message;
+        document.getElementById('errorDialog').classList.remove("is-hidden");
+        hideProcessingModal();
+      });
+    }
+
+    function setInfoForHTLC() {
+      let contract = document.getElementById('contract').value;
+      let closeRemainderTo = document.getElementById('closeremainder');
+      let passphrase = document.getElementById('passphrase');
+
+      closeRemainderTo.value = contractsDict[contract];
+      passphrase.value = passphraseDict[contract];
     }
 
     async function waitForAlgosignerConfirmation(tx) {
@@ -354,6 +454,8 @@
           path: '/v2/transactions/pending/' + tx.txId
         });
       }
+      
+      return tx;
     }
 
     function updateMicroAlgoConverter(microAlgoValue) {
@@ -376,16 +478,9 @@
       document.body.style.position = "";
     }
 
-    document.getElementById('from').addEventListener('change', function () {
-      let selAsset = document.getElementById('asset');
-
-      renderLoadingSelect(selAsset);
-      fetchAssets(this.value)
-        .then((assetData) => renderAssetSelect(selAsset, assetData))
-    });
-
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
     document.getElementById('btnMakeDeposit').addEventListener('click', createHtlc);
+    document.getElementById('btnUnlockFunds').addEventListener('click', unlockHtlc);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/site.js"></script>

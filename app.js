@@ -88,6 +88,28 @@ http.createServer(function (request, response) {
     createHashTimeLockContract(options['owner'], options['receiver'])
       .then((data) => {
         response.write(JSON.stringify({
+          "contractAddress": data[0],
+          "passphrase": data[1]
+        }));
+        response.statusCode = 200;
+        response.end();
+      })
+      .catch((e) => {
+        console.log(e);
+        response.write(e.message);
+        response.statusCode = e.status;
+        response.end();
+      });
+  } else if (filePath.includes('./unlockHashTimeLockContract')) {
+    var optionsQuerystring = filePath.split('?').pop();
+
+    var options = querystring.parse(optionsQuerystring);
+
+    require('./static/js/hashtimelock')();
+
+    unlockHashTimeLockContract(options['address'], options['closeRemainderTo'], options['preb64'])
+      .then((data) => {
+        response.write(JSON.stringify({
           "txId": data
         }));
         response.statusCode = 200;
@@ -99,12 +121,6 @@ http.createServer(function (request, response) {
         response.statusCode = e.status;
         response.end();
       });
-  } else if (filePath.includes('./executeHashTimeLockContract')) {
-    var optionsQuerystring = filePath.split('?').pop();
-
-    var options = querystring.parse(optionsQuerystring);
-
-    // stub
     
   } else if (filePath.includes('./createSplitContract')) {
     var optionsQuerystring = filePath.split('?').pop();

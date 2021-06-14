@@ -1,6 +1,7 @@
 module.exports = function() {
   // let's import the needed modules
   const algosdk = require('algosdk');
+  const fs = require('fs').promises;
   const htlcTemplate = require("algosdk/src/logicTemplates/htlc");
   const crypto = require('crypto');
   var randomWords = require('random-words');
@@ -41,18 +42,55 @@ module.exports = function() {
     let program = htlc.getProgram();
     let address = htlc.getAddress();
 
-    let lsig = algosdk.makeLogicSig(program, args);
-
     // at this point you can write the contract to storage in order to reference it later
     // we're going to do that right now
     await fs.writeFile(`static/contracts/${address}`, program);
 
-    // also write the logic signature to a file
-    await fs.writeFile(`static/lsig/${address}`, lsig);
+    return [address, strRandomWords];
+  }
 
-    // need to fund and create logic sig transaction in order to see how it all
-    // comes together
+  this.unlockHashTimeLockContract = async function(contractAddress, closeRemainderTo, 
+    preimageBase64) {
+    // create the client
+    let algodClient = new algosdk.Algodv2(token, server, port);
 
-    return address;
+    console.log(preimageBase64);
+
+    let txParams = await algodClient.getTransactionParams().do();
+
+    // read the TEAL program from local storage
+    const data = await fs.readFile(`static/contracts/${contractAddress}`);
+    let htlcProgram = data;
+
+    let args = [ Buffer.from(preimageBase64, 'base64').toString('ascii') ];
+
+    console.log(args);
+
+    let lsig = algosdk.makeLogicSig(htlcProgram, args);
+
+    // create a transaction closing out the HTLC to the recipient
+    // this will fail if the preimage isn't correct
+    let txn = {
+      "from": contractAddress,
+      // zero account
+      "to": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+      "fee": 1,
+      "type": "pay",
+      "amount": 0,
+      "firstRound": txParams.firstRound,
+      "lastRound": txParams.lastRound,
+      "genesisID": txParams.genesisID,
+      "genesisHash": txParams.genesisHash,
+      "closeRemainderTo": closeRemainderTo
+    };
+
+    // create logic signed transaction.
+    let rawSignedTxn = algosdk.signLogicSigTransaction(txn, lsig);
+
+    //Submit the lsig signed transaction
+    let tx = (await algodClient.sendRawTransaction(rawSignedTxn.blob).do());
+    console.log("Transaction: " + tx.txId);
+
+    return tx.txId;
   }
 }
