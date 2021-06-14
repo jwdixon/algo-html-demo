@@ -123,7 +123,9 @@
       <div id="divAlgoSignerCheck" class="is-hidden">
         <h1 class="title">AlgoSigner not installed!</h1>
         <p class="subtitle">
-          You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
+          You don't appear to have AlgoSigner installed! You can get it from the <a target="_blank"
+            href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">Chrome Web
+            Store</a>.
         </p>
       </div>
 
@@ -132,8 +134,7 @@
 
         <p class="subtitle">
           Split a payment between two accounts. If you don't have any Algos to test with, use the TestNet Faucet in the
-          Tools menu to add Algos to your
-          TestNet account.
+          Tools menu to add Algos to your TestNet account.
         </p>
 
         <div class="columns">
@@ -257,6 +258,7 @@
         </div>
         <button class="button is-dark is-fullwidth" id="btnSignAndSend">Sign and Send</button>
       </div>
+    </div>
   </section>
 
   <div class="modal" id="processingModal">
@@ -289,15 +291,12 @@
           renderAccountSelect(document.getElementById('receiver2'), acctData);
         })
         .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
+          handleClientError(e.message);
+          hideProcessingModal();
         });
     }
 
     function executeSplitTransaction() {
-      showProcessingModal();
-
       let sender = document.getElementById('sender').value;
       let recipient1 = document.getElementById('receiver1').value;
       let recipient2 = document.getElementById('receiver2').value;
@@ -306,15 +305,31 @@
       let amount = document.getElementById('amount').value;
       let contractAddress = null;
 
+      /*
+      if(amount * ratio1 / 100 < 3000 || amount * ratio2 / 100 < 3000) {
+        document.getElementById('errorMessage').innerHTML = 
+        "The amount each recipient is paid must be at least 3000 µAlgos."
+        document.getElementById('successDialog').classList.add("is-hidden");
+        document.getElementById('errorDialog').classList.remove("is-hidden");
+
+        return;
+      }*/
+
+      showProcessingModal();
+
       document.getElementById('processingMessage').innerHTML = "Creating split contract...";
 
       fetch(
           `createSplitContract?sender=${sender}&recipient1=${recipient1}&ratio1=${ratio1}&recipient2=${recipient2}&ratio2=${ratio2}`
-          )
+        )
         .then((d) => d.json())
         .then((d) => {
-          contractAddress = d.contractAddress;
-          console.log('contractAddress: ' + contractAddress);
+          if (d["error"]) {
+            throw d["error"];
+          } else {
+            contractAddress = d.contractAddress;
+            console.log('contractAddress: ' + contractAddress);
+          }
         })
         // connect to AlgoSigner
         .then(AlgoSigner.connect())
@@ -344,24 +359,30 @@
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
-        .then((tx) => waitForAlgosignerConfirmation(tx))
-        .then((d) => {
+        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
+        .then(() => {
           document.getElementById('processingMessage').innerHTML = "Executing contract...";
         })
         // after the contract funding is confirmed, execute the split
         .then(() => fetch(`executeSplitContract?address=${contractAddress}&amount=${amount}`))
         .then((d) => d.json())
         .then((d) => {
-          // was successful
-          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
-            " was successfully sent.";
-          document.getElementById('successDialog').classList.remove("is-hidden");
+          if (d["error"]) {
+            throw d["error"];
+          } else {
+            // was successful
+            document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +
+              " was successfully sent. <a target=&quot;_blank&quot; href='https://testnet.algoexplorer.io/tx/" + d[
+                'txId'] +
+              "'>View on AlgoExplorer</a>";
+            document.getElementById('successDialog').classList.remove("is-hidden");
+            document.getElementById('errorDialog').classList.add("is-hidden");
+          }
+
           hideProcessingModal();
         })
         .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
+          handleClientError(e.message);
           hideProcessingModal();
         });
     }

@@ -9,6 +9,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
     integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
     crossorigin="anonymous" />
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
 </head>
 
 <body>
@@ -113,7 +122,9 @@
       <div id="divAlgoSignerCheck" class="is-hidden">
         <h1 class="title">AlgoSigner not installed!</h1>
         <p class="subtitle">
-          You don't appear to have AlgoSigner installed! You can get it from the Chrome Web Store.
+          You don't appear to have AlgoSigner installed! You can get it from the <a target="_blank"
+            href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">Chrome Web
+            Store</a>.
         </p>
       </div>
 
@@ -276,7 +287,19 @@
         </div>
         <button class="button is-dark is-fullwidth" id="btnTradeAssets">Trade Assets</button>
       </div>
+    </div>
   </section>
+
+  <div class="modal" id="processingModal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="box">
+        <span id="processingMessage">Processing, please wait...</span>
+        <progress class="progress is-small is-primary mt-1" max="100">15%</progress>
+      </div>
+    </div>
+  </div>
+
   <script>
     window.addEventListener("load", function () {
       checkForAlgosigner();
@@ -312,14 +335,16 @@
         .then(() => fetchAssets(selFromRight.value))
         .then((assetData) => renderAssetSelect(selAssetRight, assetData))
         .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
+          handleClientError(e.message);
+          hideProcessingModal();
         });
     }
 
     function fetchAssets(account) {
       if (account != -1) {
+        showProcessingModal();
+        document.getElementById('processingMessage').innerHTML = "Please wait...";
+
         let assetData = [];
 
         return AlgoSigner.algod({
@@ -337,11 +362,11 @@
               ),
               Promise.resolve());
           })
+          .then(() => hideProcessingModal())
           .then(() => assetData)
           .catch((e) => {
-            console.error(e);
-            document.getElementById('errorMessage').innerHTML = e.message;
-            document.getElementById('errorDialog').classList.remove("is-hidden");
+            handleClientError(e.message);
+            hideProcessingModal();
           });
       } else {
         return [];
@@ -349,13 +374,14 @@
     }
 
     function tradeAssets() {
+      showProcessingModal();
+      document.getElementById('processingMessage').innerHTML = "Sending transaction...";
+
       let tx1 = {};
       let tx2 = {};
       let signedTx1 = {};
       let signedTx2 = {};
       let txGroup = [];
-
-      let resultTx = {};
 
       AlgoSigner.connect()
         .then(() => AlgoSigner.algod({
@@ -405,7 +431,7 @@
         })
         .then((d) => {
           txGroup = d;
-          // Modify the group fields in orginal transactions to be base64 encoded strings
+          // Modify the group fields in original transactions to be base64 encoded strings
           tx1.group = txGroup[0].group.toString('base64');
           tx2.group = txGroup[1].group.toString('base64');
         })
@@ -434,20 +460,20 @@
             tx: grouped_txns
           });
         })
+        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
         .then((tx) => {
-          resultTx = tx;
-          return waitForAlgosignerConfirmation(tx);
-        })
-        .then(() => {
           // was successful
-          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + resultTx.txId +
-            " was successfully sent.";
+          document.getElementById('successMessage').innerHTML = "The transaction with TxID " + tx.txId +
+            " was successfully sent. <a target=&quot;_blank&quot; href='https://testnet.algoexplorer.io/tx/" + tx
+            .txId +
+            "'>View on AlgoExplorer</a>";
+          document.getElementById('errorDialog').classList.add("is-hidden");
           document.getElementById('successDialog').classList.remove("is-hidden");
+          hideProcessingModal();
         })
         .catch((e) => {
-          console.error(e);
-          document.getElementById('errorMessage').innerHTML = e.message;
-          document.getElementById('errorDialog').classList.remove("is-hidden");
+          handleClientError(e.message);
+          hideProcessingModal();
         });
     }
 
