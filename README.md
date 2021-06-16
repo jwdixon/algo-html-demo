@@ -7,7 +7,7 @@ This demo was built to communicate these advanced features in an easy-to-underst
 ## Before You Begin
 
  - **Please note that this demo has not been audited for security and should not be used in a production environment without modifications to enhance the security.**
- - You should have access to an Algorand node (this demo assumes you're using PureStake).
+ - You should have access to an Algorand node (this demo assumes you're using <a target="_blank" href="https://developer.purestake.io/">PureStake</a>).
  - You should have Node.js installed on your computer.
  - You should have the <a target="_blank" href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">AlgoSigner Google Chrome extension</a> installed, as this demo makes extensive use of it.</strong>
  - You should also make a couple of wallets on Algorand <strong>TestNet</strong> and use the <a target="_blank" href="https://testnet.algoexplorer.io/dispenser">TestNet ALGO Faucet</a> to generate Algos for them, as these exercises demonstrate how to move assets between two or more addresses.</p>
