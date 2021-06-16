@@ -34,6 +34,7 @@ module.exports = function () {
     let expiryRound = txParams.lastRound + parseInt(10000);
     let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
 
+    console.log(`Creating limit order contract...`);
     // create the limit contract template
     let limit = new limitTemplate.LimitOrder(contractOwner, assetID, ratn, ratd,
       expiryRound, minTrade, maxFee);
@@ -44,6 +45,9 @@ module.exports = function () {
 
     // at this point you can write the contract to storage in order to reference it later
     // we're going to do that right now
+    console.log(`Contract created at address ${address}.`);
+    console.log(`Writing contract to file at static/contracts/${address}...`);
+
     await fs.writeFile(`static/contracts/${address}`, program);
 
     // next, we fund the contract account with the minimum amount of microAlgos required
@@ -52,15 +56,17 @@ module.exports = function () {
     // sender pays fee to send the required amount of Algos to the contract
     // so that's a total of 102,000 microAlgos
 
-    let suggestedFee = Math.max(txParams.fee, txParams.minFee);
-
+    console.log(`Reconstituting BUBBLE owner account from private key...`);
     let assetOwner = algosdk.mnemonicToSecretKey(bubblegumAccountMnemonic);
+
+    console.log(`Funding contract with the minimum amount of µAlgos required...`);
     let note = algosdk.encodeObj("Contract funding transaction");
     let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr, 
       address, 100000 + (1000 * 2), undefined, note, txParams);
     let signedFundingTx = fundingTx.signTxn(assetOwner.sk);
     let resultTx = (await algodClient.sendRawTransaction(signedFundingTx).do());
     await algoutils.waitForConfirmation(algodClient, resultTx.txId);
+    console.log(`Transaction confirmed. Funding transaction ID: ${resultTx.txId}`);
 
     // return the limit order's address on the blockchain
     return address;
@@ -83,13 +89,14 @@ module.exports = function () {
     // swap 1 BUBBLE for 1,000,000 microAlgos (+fee)
     let assetOwner = algosdk.mnemonicToSecretKey(bubblegumAccountMnemonic);
     let secretKey = assetOwner.sk;
-    let txnBytes = limitTemplate.getSwapAssetsTransaction(limitProgram, assetAmount,
-      microAlgoAmount, secretKey, txParams.fee, txParams.firstRound, txParams.lastRound,
-      txParams.genesisHash);
 
+    console.log(`Attempting to execute contract...`);
+    let txnBytes = limitTemplate.getSwapAssetsTransaction(limitProgram, assetAmount,
+      microAlgoAmount, secretKey, txParams.fee, txParams.firstRound, 
+      txParams.lastRound, txParams.genesisHash);
     let tx = (await algodClient.sendRawTransaction(txnBytes).do());
-    console.log(tx);
     await algoutils.waitForConfirmation(algodClient, tx.txId);
+    console.log(`Execution transaction ID: ${tx.txId}`);
 
     // return the transaction ID
     return tx.txId;

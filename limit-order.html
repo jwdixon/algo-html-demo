@@ -148,7 +148,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="payacct">
+                      <select id="paymentAccountField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -178,21 +178,27 @@
 
   <script>
     window.addEventListener("load", function () {
-      checkForAlgosigner();
+      checkForAlgosigner(); // see algosignerutils.js
     });
 
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
     function fetchAccounts() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Please wait...";
+      showProcessingModal("Please wait...");
 
-      renderLoadingSelect(document.getElementById('payacct'));
+      let paymentAccountSelect = document.getElementById('paymentAccountField');
+
+      renderLoadingSelect(paymentAccountSelect);
 
       AlgoSigner.connect()
+        // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        .then((acctData) => {
-          renderAccountSelect(document.getElementById('payacct'), acctData);
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(paymentAccountSelect, accountsData);
           hideProcessingModal();
         })
         .catch((e) => {
@@ -202,14 +208,12 @@
     }
 
     function executeBubblegumTransaction() {
-      showProcessingModal();
-
-      let payacct = document.getElementById('payacct').value;
+      let paymentAccount = document.getElementById('paymentAccountField').value;
       let contractAddress = null;
 
-      document.getElementById('processingMessage').innerHTML = "Creating limit contract...";
+      showProcessingModal("Creating limit contract...");
 
-      fetch(`createBubblegumLimitContract?account=${payacct}`)
+      fetch(`createBubblegumLimitContract?account=${paymentAccount}`)
         .then((d) => d.json())
         .then((d) => {
           if (d["error"]) {
@@ -217,13 +221,12 @@
           } else {
             // was successful
             contractAddress = d.contractAddress;
-            console.log('contractAddress: ' + contractAddress);
-            document.getElementById('processingMessage').innerHTML = "Sending opt-in transaction...";
+            showProcessingModal("Sending opt-in transaction...");
           }
         })
         // connect to AlgoSigner
         .then(AlgoSigner.connect())
-        // get the current params
+        // fetch current parameters
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
@@ -231,10 +234,35 @@
         // opt in to BUBBLE
         .then((txParams) => AlgoSigner.sign({
           assetIndex: 15431290,
-          from: payacct,
+          from: paymentAccount,
           amount: 0,
-          to: payacct,
-          type: 'axfer',
+          to: paymentAccount,
+          type: 'axfer',  // ASA Transfer (axfer)
+          fee: txParams['min-fee'],
+          firstRound: txParams['last-round'],
+          lastRound: txParams['last-round'] + 1000,
+          genesisID: txParams['genesis-id'],
+          genesisHash: txParams['genesis-hash'],
+          flatFee: true
+        }))
+        // send signed transaction
+        .then((signedTx) => AlgoSigner.send({
+          ledger: 'TestNet',
+          tx: signedTx.blob
+        }))
+        .then(() => showProcessingModal("Funding contract..."))
+        // fetch updated parameters
+        .then(() => AlgoSigner.algod({
+          ledger: 'TestNet',
+          path: '/v2/transactions/params'
+        }))
+        // pay for BUBBLE
+        .then((txParams) => AlgoSigner.sign({
+          from: paymentAccount,
+          to: contractAddress,
+          amount: +1000000,
+          note: 'Pay for BUBBLE',
+          type: 'pay',  // Payment (pay)
           fee: txParams['min-fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
@@ -246,37 +274,10 @@
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
-        .then(() => {
-          document.getElementById('processingMessage').innerHTML = "Funding contract...";
-        })
-        // get the current params
-        .then(() => AlgoSigner.algod({
-          ledger: 'TestNet',
-          path: '/v2/transactions/params'
-        }))
-        // pay for BUBBLE
-        .then((txParams) => AlgoSigner.sign({
-          from: payacct,
-          to: contractAddress,
-          amount: +1000000,
-          note: 'Pay for BUBBLE',
-          type: 'pay',
-          fee: txParams['fee'],
-          firstRound: txParams['last-round'],
-          lastRound: txParams['last-round'] + 1000,
-          genesisID: txParams['genesis-id'],
-          genesisHash: txParams['genesis-hash'],
-          flatFee: true
-        }))
-        .then((signedTx) => AlgoSigner.send({
-          ledger: 'TestNet',
-          tx: signedTx.blob
-        }))
-        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
-        .then(() => {
-          document.getElementById('processingMessage').innerHTML = "Executing contract...";
-        })
-        // after the contract funding is confirmed, swap the assets
+        // wait for confirmation from the blockchain
+        .then((tx) => waitForAlgosignerConfirmation(tx))
+        .then(() => showProcessingModal("Executing contract..."))
+        // after the contract funding is confirmed, execute the swap
         .then(() => fetch(`executeBubblegumLimitContract?address=${contractAddress}`))
         .then((d) => d.json())
         .then((d) => {

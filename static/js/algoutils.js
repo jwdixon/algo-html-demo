@@ -5,7 +5,7 @@ async function waitForConfirmation (algodClient, txId) {
     const pendingInfo = await algodClient.pendingTransactionInformation(txId).do();
     if (pendingInfo['confirmed-round'] !== null && pendingInfo['confirmed-round'] > 0) {
       //Got the completed Transaction
-      console.log('Transaction confirmed in round ' + pendingInfo['confirmed-round']);
+      console.log(`Transaction confirmed in round ${pendingInfo['confirmed-round']}.`);
       break;
     }
     lastround++;

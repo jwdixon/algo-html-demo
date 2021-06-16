@@ -256,19 +256,21 @@
     /**
      * Fetches accounts belonging to the current AlgoSigner wallet
      */
-    function fetchAccounts() {
+     function fetchAccounts() {
       showProcessingModal("Please wait...");
-      renderLoadingSelect(document.getElementById('fromField'));
+      
+      let fromSelect = document.getElementById('fromField');
+
+      renderLoadingSelect(fromSelect);
 
       AlgoSigner.connect()
         // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        // populate the account dropdowns
+        // populate account dropdowns
         .then((accountsData) => {
-          renderAccountSelect(document.getElementById('fromField'), accountsData);
-          hideProcessingModal();
+          renderAccountSelect(fromSelect, accountsData);
         })
         .catch((e) => {
           handleClientError(e.message);

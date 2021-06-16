@@ -30,6 +30,7 @@ module.exports = function () {
     let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
 
     // create the split contract template
+    console.log(`Creating split contract...`);
     let split = new splitTemplate.Split(sender, receivers[0], receivers[1], ratn, ratd,
       expiryRound, minPay, maxFee);
 
@@ -39,6 +40,9 @@ module.exports = function () {
 
     // at this point you can write the contract to storage in order to reference it later
     // we're going to do that right now
+    console.log(`Contract created at address ${address}.`);
+    console.log(`Writing contract to file at static/contracts/${address}...`);
+
     await fs.writeFile(`static/contracts/${address}`, program);
 
     // return the split contract's address on the blockchain
@@ -58,8 +62,10 @@ module.exports = function () {
     let txnBytes = splitTemplate.getSplitFundsTransaction(splitProgram, amount, 
       txParams.firstRound, txParams.lastRound, txParams.fee, txParams.genesisHash);
 
+    console.log(`Attempting to execute contract...`);
     let tx = (await algodClient.sendRawTransaction(txnBytes).do());
     await algoutils.waitForConfirmation(algodClient, tx.txId);
+    console.log(`Execution transaction ID: ${tx.txId}`);
 
     // return the transaction ID
     return tx.txId;

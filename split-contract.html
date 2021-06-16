@@ -141,13 +141,13 @@
           <div class="column">
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">Sender Account</label>
+                <label class="label">Sender</label>
               </div>
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="sender">
+                      <select id="senderField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -164,13 +164,13 @@
           <div class="column is-10">
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">Receiver #1</label>
+                <label class="label">Receiver A</label>
               </div>
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="receiver1">
+                      <select id="receiverAField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -187,8 +187,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" type="number" value="50" min="0" max="100" id="percent1"
-                      onchange="balancePercentageFields(this.id);">
+                    <input id="percentOfPaymentAField" class="input" type="number" value="50" min="0" max="100"                       onchange="balancePercentageFields(this.id);">
                     <div class="icon is-small is-left">
                       <i class="fas fa-percent"></i>
                     </div>
@@ -202,13 +201,13 @@
           <div class="column is-10">
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">Receiver #2</label>
+                <label class="label">Receiver B</label>
               </div>
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="receiver2">
+                      <select id="receiverBField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -225,7 +224,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" type="number" value="50" min="0" max="100" id="percent2"
+                    <input id="percentOfPaymentBField" class="input" type="number" value="50" min="0" max="100" 
                       onchange="balancePercentageFields(this.id);">
                     <div class="icon is-small is-left">
                       <i class="fas fa-percent"></i>
@@ -243,7 +242,7 @@
           <div class="field-body">
             <div class="field has-addons">
               <div class="control is-expanded has-icons-left">
-                <input class="input" id="amount" placeholder="µAlgos" onchange="updateMicroAlgoConverter(this.value);">
+                <input class="input" id="amountToSplitField" placeholder="µAlgos" onchange="updateMicroAlgoConverter(this.value);">
                 <div class="icon is-small is-left">
                   <i class="fas fa-coins"></i>
                 </div>
@@ -277,18 +276,26 @@
     });
 
     function fetchAccounts() {
-      renderLoadingSelect(document.getElementById('sender'));
-      renderLoadingSelect(document.getElementById('receiver1'));
-      renderLoadingSelect(document.getElementById('receiver2'));
+      showProcessingModal("Please wait...");
+      let senderSelect = document.getElementById('senderField');
+      let receiverASelect = document.getElementById('receiverAField');
+      let receiverBSelect = document.getElementById('receiverBField');
+
+      renderLoadingSelect(senderSelect);
+      renderLoadingSelect(receiverASelect);
+      renderLoadingSelect(receiverBSelect);
 
       AlgoSigner.connect()
+        // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        .then((acctData) => {
-          renderAccountSelect(document.getElementById('sender'), acctData);
-          renderAccountSelect(document.getElementById('receiver1'), acctData);
-          renderAccountSelect(document.getElementById('receiver2'), acctData);
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(senderSelect, accountsData);
+          renderAccountSelect(receiverASelect, accountsData);
+          renderAccountSelect(receiverBSelect, accountsData);
+          hideProcessingModal();
         })
         .catch((e) => {
           handleClientError(e.message);
@@ -297,15 +304,14 @@
     }
 
     function executeSplitTransaction() {
-      let sender = document.getElementById('sender').value;
-      let recipient1 = document.getElementById('receiver1').value;
-      let recipient2 = document.getElementById('receiver2').value;
-      let ratio1 = document.getElementById('percent1').value;
-      let ratio2 = document.getElementById('percent2').value;
-      let amount = document.getElementById('amount').value;
+      let sender = document.getElementById('senderField').value;
+      let recipient1 = document.getElementById('receiverAField').value;
+      let recipient2 = document.getElementById('receiverBField').value;
+      let ratio1 = document.getElementById('percentOfPaymentAField').value;
+      let ratio2 = document.getElementById('percentOfPaymentBField').value;
+      let amount = document.getElementById('amountToSplitField').value;
       let contractAddress = null;
 
-      /*
       if(amount * ratio1 / 100 < 3000 || amount * ratio2 / 100 < 3000) {
         document.getElementById('errorMessage').innerHTML = 
         "The amount each recipient is paid must be at least 3000 µAlgos."
@@ -313,11 +319,9 @@
         document.getElementById('errorDialog').classList.remove("is-hidden");
 
         return;
-      }*/
+      }
 
-      showProcessingModal();
-
-      document.getElementById('processingMessage').innerHTML = "Creating split contract...";
+      showProcessingModal("Creating split contract...");
 
       fetch(
           `createSplitContract?sender=${sender}&recipient1=${recipient1}&ratio1=${ratio1}&recipient2=${recipient2}&ratio2=${ratio2}`
@@ -328,38 +332,37 @@
             throw d["error"];
           } else {
             contractAddress = d.contractAddress;
-            console.log('contractAddress: ' + contractAddress);
           }
         })
         // connect to AlgoSigner
         .then(AlgoSigner.connect())
-        .then(() => {
-          document.getElementById('processingMessage').innerHTML = "Funding contract...";
-        })
+        .then(() => showProcessingModal("Funding contract..."))
         // get the current params
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
         }))
-        // send payment to be split + minimum & execution fees
+        // send payment to be split + minimum & execution fees (one fee for each split payment)
         .then((txParams) => AlgoSigner.sign({
           from: sender,
           to: contractAddress,
-          amount: +amount + 100000 + 2000,
+          amount: +amount + 100000 + (txParams['min-fee'] * 2),
           note: 'Payment to split',
-          type: 'pay',
-          fee: txParams['fee'],
+          type: 'pay', // Payment (pay)
+          fee: txParams['min-fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
           genesisID: txParams['genesis-id'],
           genesisHash: txParams['genesis-hash'],
           flatFee: true
         }))
+        // send signed transaction
         .then((signedTx) => AlgoSigner.send({
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
-        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
+        // wait for confirmation from the blockchain
+        .then((tx) => waitForAlgosignerConfirmation(tx))
         .then(() => {
           document.getElementById('processingMessage').innerHTML = "Executing contract...";
         })
@@ -387,16 +390,16 @@
         });
     }
 
-    function balancePercentageFields(senderId) {
-      var percent1Element = document.getElementById('percent1');
-      var percent2Element = document.getElementById('percent2');
+    function balancePercentageFields(sender) {
+      var percentAElement = document.getElementById('percentOfPaymentAField');
+      var percentBElement = document.getElementById('percentOfPaymentBField');
 
-      if (senderId == "percent1") {
-        percent1Element.value = Math.max(Math.min(percent1Element.value, 100), 0);
-        percent2Element.value = 100 - percent1.value;
-      } else if (senderId == "percent2") {
-        percent2Element.value = Math.max(Math.min(percent2Element.value, 100), 0);
-        percent1Element.value = 100 - percent2.value;
+      if (sender == "percentOfPaymentAField") {
+        percentAElement.value = Math.max(Math.min(percentAElement.value, 100), 0);
+        percentBElement.value = 100 - percentAElement.value;
+      } else if (sender == "percentOfPaymentBField") {
+        percentBElement.value = Math.max(Math.min(percentBElement.value, 100), 0);
+        percentAElement.value = 100 - percentBElement.value;
       }
     }
 

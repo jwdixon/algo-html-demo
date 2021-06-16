@@ -150,7 +150,7 @@
                     <div class="field">
                       <div class="control is-expanded has-icons-left">
                         <div class="select is-fullwidth">
-                          <select id="from">
+                          <select id="fromField">
                             <option value="-1">No accounts available</option>
                           </select>
                         </div>
@@ -169,7 +169,7 @@
                     <div class="field">
                       <div class="control is-expanded has-icons-left">
                         <div class="select is-fullwidth">
-                          <select id="to">
+                          <select id="toField">
                             <option value="-1">No accounts available</option>
                           </select>
                         </div>
@@ -187,7 +187,7 @@
                   <div class="field-body">
                     <div class="field has-addons">
                       <div class="control is-expanded has-icons-left">
-                        <input class="input" id="amount" placeholder="µAlgos"
+                        <input class="input" id="depositAmountField" placeholder="µAlgos"
                           onchange="updateMicroAlgoConverter(this.value);">
                         <div class="icon is-small is-left">
                           <i class="fas fa-coins"></i>
@@ -226,7 +226,7 @@
                     <div class="field">
                       <div class="control is-expanded has-icons-left">
                         <div class="select is-fullwidth">
-                          <select id="contract" onchange="setInfoForHTLC();">
+                          <select id="contractAddressField" onchange="setInfoForHTLC();">
                           </select>
                         </div>
                         <div class="icon is-small is-left">
@@ -243,7 +243,7 @@
                   <div class="field-body">
                     <div class="field">
                       <div class="control is-expanded has-icons-left">
-                        <input class="input" type="text" id="closeremainder" disabled>
+                        <input id="closeRemainderToField" class="input" type="text" disabled>
                         <div class="icon is-small is-left">
                           <i class="fas fa-wallet"></i>
                         </div>
@@ -258,7 +258,7 @@
                   <div class="field-body">
                     <div class="field">
                       <div class="control is-expanded has-icons-left">
-                        <input id="passphrase" class="input" type="text">
+                        <input id="passphraseField" class="input" type="text">
                         <div class="icon is-small is-left">
                           <i class="fas fa-lock"></i>
                         </div>
@@ -297,19 +297,23 @@
     });
 
     function fetchAccounts() {
-      let selFrom = document.getElementById('from');
-      let selTo = document.getElementById('to');
+      showProcessingModal("Please wait...");
+      let fromSelect = document.getElementById('fromField');
+      let toSelect = document.getElementById('toField');
 
-      renderLoadingSelect(selFrom);
-      renderLoadingSelect(selTo);
+      renderLoadingSelect(fromSelect);
+      renderLoadingSelect(toSelect);
 
       AlgoSigner.connect()
+        // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        .then((acctData) => {
-          renderAccountSelect(selFrom, acctData);
-          renderAccountSelect(selTo, acctData);
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(fromSelect, accountsData);
+          renderAccountSelect(toSelect, accountsData);
+          hideProcessingModal();
         })
         .catch((e) => {
           handleClientError(e.message);
@@ -320,14 +324,17 @@
     function createHtlc() {
       showProcessingModal();
 
-      let from = document.getElementById('from').value;
-      let to = document.getElementById('to').value;
-      let selContract = document.getElementById('contract');
-      let amount = document.getElementById('amount').value;
+      let from = document.getElementById('fromField').value;
+      let to = document.getElementById('toField').value;
+      let amount = document.getElementById('depositAmountField').value;
+
+      let contractSelect = document.getElementById('contractAddressField');
+      let closeToField = document.getElementById('closeRemainderToField');
+      let passphraseField = document.getElementById('passphraseField');
 
       let currentContractAddress = null;
 
-      document.getElementById('processingMessage').innerHTML = "Creating hash time lock contract...";
+      showProcessingModal("Creating hash time lock contract...");
 
       fetch(`createHashTimeLockContract?owner=${from}&receiver=${to}`)
         .then((d) => d.json())
@@ -335,20 +342,20 @@
           if (d["error"]) {
               throw d["error"];
           } else {
+            // normally you would store this kind of stuff securely in a database
+            // for this demo we're going to store it in memory
             contractsDict[d.contractAddress] = to;
             passphraseDict[d.contractAddress] = d.passphrase;
-
-            appendSelectOption(selContract, d.contractAddress, d.contractAddress);
             currentContractAddress = d.contractAddress;
-            document.getElementById('closeremainder').value = to;
-            document.getElementById('passphrase').value = d.passphrase;
+
+            closeToField.value = to;
+            passphraseField.value = d.passphrase;
+            appendSelectOption(contractSelect, d.contractAddress, d.contractAddress);
           }
         })
         // connect to AlgoSigner
         .then(AlgoSigner.connect())
-        .then(() => {
-          document.getElementById('processingMessage').innerHTML = "Funding contract...";
-        })
+        .then(() => showProcessingModal("Funding contract..."))
         // get the current params
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
@@ -358,21 +365,23 @@
         .then((txParams) => AlgoSigner.sign({
           from: from,
           to: currentContractAddress,
-          amount: +amount + 100000 + 1000,
+          amount: +amount + 100000 + txParams['min-fee'],
           note: 'HTLC Funding Transaction',
-          type: 'pay',
-          fee: txParams['fee'],
+          type: 'pay',  // Payment (pay)
+          fee: txParams['min-fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
           genesisID: txParams['genesis-id'],
           genesisHash: txParams['genesis-hash'],
           flatFee: true
         }))
+        // send signed transaction
         .then((signedTx) => AlgoSigner.send({
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
-        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
+        // wait for confirmation from the blockchain
+        .then((tx) => waitForAlgosignerConfirmation(tx))
         .then((tx) => {
           // was successful
           document.getElementById('successMessage').innerHTML = "The transaction with TxID " + tx.txId +
@@ -391,19 +400,14 @@
     }
 
     function unlockHtlc() {
-      showProcessingModal();
+      showProcessingModal("Trying to unlock contract...");
 
-      document.getElementById('processingMessage').innerHTML = "Trying to unlock contract...";
+      let contract = document.getElementById('contractAddressField').value;
+      let closeRemainderTo = document.getElementById('closeRemainderToField').value;
+      let passphrase = document.getElementById('passphraseField').value;
 
-      let contract = document.getElementById('contract').value;
-      let closeRemainderTo = document.getElementById('closeremainder').value;
-      let passphrase = document.getElementById('passphrase').value;
-
+      // send the passphrase as a base-64 encoded string
       let preb64 = btoa(passphrase);
-
-      console.log(contract);
-      console.log(passphrase);
-      console.log(preb64);
 
       fetch(`unlockHashTimeLockContract?address=${contract}&closeRemainderTo=${closeRemainderTo}&preb64=${preb64}`)
         .then((d) => d.json())
@@ -429,9 +433,9 @@
     }
 
     function setInfoForHTLC() {
-      let contract = document.getElementById('contract').value;
-      let closeRemainderTo = document.getElementById('closeremainder');
-      let passphrase = document.getElementById('passphrase');
+      let contract = document.getElementById('contractAddressField').value;
+      let closeRemainderTo = document.getElementById('closeRemainderToField');
+      let passphrase = document.getElementById('passphraseField');
 
       closeRemainderTo.value = contractsDict[contract];
       passphrase.value = passphraseDict[contract];

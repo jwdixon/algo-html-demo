@@ -238,20 +238,22 @@
      */
     function fetchAccounts() {
       showProcessingModal("Please wait...");
-      renderLoadingSelect(document.getElementById('fromField'));
-      renderLoadingSelect(document.getElementById('toField'));
+      
+      let fromSelect = document.getElementById('fromField');
+      let toSelect = document.getElementById('toField');
+
+      renderLoadingSelect(fromSelect);
+      renderLoadingSelect(toSelect);
 
       AlgoSigner.connect()
         // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        // populate the account dropdowns
+        // populate account dropdowns
         .then((accountsData) => {
-          renderAccountSelect(document.getElementById('fromField'), accountsData);
-          renderAccountSelect(document.getElementById('toField'), accountsData);
-
-          hideProcessingModal();
+          renderAccountSelect(fromSelect, accountsData);
+          renderAccountSelect(toSelect, accountsData);
         })
         .catch((e) => {
           handleClientError(e.message);
