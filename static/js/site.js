@@ -86,7 +86,7 @@ function renderAccountSelect(elem, data) {
   }
 }
 
-function showProcessingModal() {
+function showProcessingModal(message) {
   document.getElementById('processingModal').classList.add("is-active");
   document.body.style.overflow = "hidden";
   //document.body.style.position = "fixed";

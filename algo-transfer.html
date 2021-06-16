@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 
 <head>
@@ -146,7 +145,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="from">
+                      <select id="fromField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -165,7 +164,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="to">
+                      <select id="toField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -183,7 +182,7 @@
               <div class="field-body">
                 <div class="field has-addons">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="amount" placeholder="µAlgos"
+                    <input class="input" id="amountField" placeholder="µAlgos"
                       onchange="updateMicroAlgoConverter(this.value);">
                     <div class="icon is-small is-left">
                       <i class="fas fa-coins"></i>
@@ -204,7 +203,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="note" placeholder="(optional)">
+                    <input class="input" id="noteField" placeholder="(optional)">
                     <div class="icon is-small is-left">
                       <i class="fas fa-sticky-note"></i>
                     </div>
@@ -234,20 +233,24 @@
       checkForAlgosigner(); // see algosignerutils.js
     });
 
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
     function fetchAccounts() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Please wait...";
-
-      renderLoadingSelect(document.getElementById('from'));
-      renderLoadingSelect(document.getElementById('to'));
+      showProcessingModal("Please wait...");
+      renderLoadingSelect(document.getElementById('fromField'));
+      renderLoadingSelect(document.getElementById('toField'));
 
       AlgoSigner.connect()
+        // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        .then((acctData) => {
-          renderAccountSelect(document.getElementById('to'), acctData);
-          renderAccountSelect(document.getElementById('from'), acctData);
+        // populate the account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(document.getElementById('fromField'), accountsData);
+          renderAccountSelect(document.getElementById('toField'), accountsData);
+
           hideProcessingModal();
         })
         .catch((e) => {
@@ -256,26 +259,30 @@
         });
     }
 
+    /**
+     * Signs a transaction using the current AlgoSigner wallet
+     */
     function signAndSendTransaction() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Sending transaction...";
+      showProcessingModal("Sending transaction...");
 
-      let from = document.getElementById('from').value;
-      let to = document.getElementById('to').value;
-      let amount = document.getElementById('amount').value;
-      let note = document.getElementById('note').value;
+      let from = document.getElementById('fromField').value;
+      let to = document.getElementById('toField').value;
+      let amount = document.getElementById('amountField').value;
+      let note = document.getElementById('noteField').value;
 
       AlgoSigner.connect()
+        // fetch current parameters
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
         }))
+        // sign new transaction
         .then((txParams) => AlgoSigner.sign({
           from: from,
           to: to,
           amount: +amount,
           note: note,
-          type: 'pay',
+          type: 'pay', // Payment (pay)
           fee: txParams['min-fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
@@ -283,10 +290,12 @@
           genesisHash: txParams['genesis-hash'],
           flatFee: true
         }))
+        // send signed transaction
         .then((signedTx) => AlgoSigner.send({
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
+        // wait for confirmation from the blockchain
         .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
         .then((tx) => {
           // was successful

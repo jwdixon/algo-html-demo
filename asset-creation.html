@@ -9,15 +9,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.2/css/bulma.min.css"
     integrity="sha512-byErQdWdTqREz6DLAA9pCnLbdoGGhXfU6gm1c8bkf7F51JVmUBlayGe2A31VpXWQP+eiJ3ilTAZHCR3vmMyybA=="
     crossorigin="anonymous" />
-    <style>
-      .modal-content .box {
-        width: auto;
-      }
-  
-      .modal-content {
-        width: auto;
-      }
-    </style>
+  <style>
+    .modal-content .box {
+      width: auto;
+    }
+
+    .modal-content {
+      width: auto;
+    }
+  </style>
 </head>
 
 <body>
@@ -145,7 +145,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="from">
+                      <select id="fromField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -163,7 +163,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_name">
+                    <input class="input" id="assetNameField">
                     <div class="icon is-small is-left">
                       <i class="fas fa-signature"></i>
                     </div>
@@ -178,7 +178,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_unit_name">
+                    <input class="input" id="assetUnitField">
                     <div class="icon is-small is-left">
                       <i class="fas fa-signature"></i>
                     </div>
@@ -193,7 +193,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_total">
+                    <input class="input" id="assetTotalUnitsField">
                     <div class="icon is-small is-left">
                       <i class="fas fa-coins"></i>
                     </div>
@@ -208,7 +208,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="asset_decimals">
+                    <input class="input" id="assetNumberOfDecimalsField">
                     <div class="icon is-small is-left">
                       <i class="fas fa-coins"></i>
                     </div>
@@ -223,7 +223,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="note" placeholder="(optional)">
+                    <input class="input" id="noteField" placeholder="(optional)">
                     <div class="icon is-small is-left">
                       <i class="fas fa-sticky-note"></i>
                     </div>
@@ -250,18 +250,25 @@
 
   <script>
     window.addEventListener("load", function () {
-      checkForAlgosigner();
+      checkForAlgosigner(); // see algosignerutils.js
     });
 
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
     function fetchAccounts() {
-      let selFrom = document.getElementById('from');
+      showProcessingModal("Please wait...");
+      renderLoadingSelect(document.getElementById('fromField'));
 
       AlgoSigner.connect()
+        // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        .then((acctData) => {
-          renderAccountSelect(selFrom, acctData);
+        // populate the account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(document.getElementById('fromField'), accountsData);
+          hideProcessingModal();
         })
         .catch((e) => {
           handleClientError(e.message);
@@ -269,21 +276,26 @@
         });
     }
 
+    /**
+     * Signs a transaction using the current AlgoSigner wallet
+     */
     function signAndSendTransaction() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Sending transaction...";
+      showProcessingModal("Sending transaction...");
 
-      let from = document.getElementById('from').value;
-      let assetName = document.getElementById('asset_name').value;
-      let assetUnit = document.getElementById('asset_unit_name').value;
-      let assetTotal = document.getElementById('asset_total').value;
-      let assetDecimals = document.getElementById('asset_decimals').value;
-      let assetNote = document.getElementById('note').value;
+      let from = document.getElementById('fromField').value;
+      let assetName = document.getElementById('assetNameField').value;
+      let assetUnit = document.getElementById('assetUnitField').value;
+      let assetTotal = document.getElementById('assetTotalUnitsField').value;
+      let assetDecimals = document.getElementById('assetNumberOfDecimalsField').value;
+      let assetNote = document.getElementById('noteField').value;
 
-      AlgoSigner.algod({
+      AlgoSigner.connect()
+        // fetch current parameters
+        .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
-        })
+        }))
+        // sign new transaction
         .then((txParams) => AlgoSigner.sign({
           from: from,
           assetName: assetName,
@@ -291,7 +303,7 @@
           assetTotal: +assetTotal,
           assetDecimals: +assetDecimals,
           note: assetNote,
-          type: 'acfg',
+          type: 'acfg', // ASA Configuration (acfg)
           fee: txParams['min-fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
@@ -299,13 +311,13 @@
           genesisHash: txParams['genesis-hash'],
           flatFee: true
         }))
+        // send signed transaction
         .then((signedTx) => AlgoSigner.send({
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
-        .then((tx) => {
-          return waitForAlgosignerConfirmation(tx);
-        })
+        // wait for confirmation from the blockchain
+        .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
         .then((tx) => {
           // was successful
           document.getElementById('successMessage').innerHTML = "An asset named &quot;" + assetName +

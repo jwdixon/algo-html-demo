@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 
 <head>
@@ -146,7 +145,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="from">
+                      <select id="fromField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -165,7 +164,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="asset">
+                      <select id="assetField">
                         <option>No assets available</option>
                       </select>
                     </div>
@@ -183,7 +182,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="amount">
+                    <input class="input" id="amountField">
                     <div class="icon is-small is-left">
                       <i class="fas fa-coins"></i>
                     </div>
@@ -199,7 +198,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="to">
+                      <select id="toField">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -217,7 +216,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="note" placeholder="(optional)">
+                    <input class="input" id="noteField" placeholder="(optional)">
                     <div class="icon is-small is-left">
                       <i class="fas fa-sticky-note"></i>
                     </div>
@@ -252,31 +251,38 @@
 
   <script>
     window.addEventListener("load", function () {
-      checkForAlgosigner();
+      checkForAlgosigner(); // see algosignerutils.js
     });
 
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
     function fetchAccounts() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Please wait...";
+      showProcessingModal("Please wait...");
 
-      let selFrom = document.getElementById('from');
-      let selTo = document.getElementById('to');
-      let selAsset = document.getElementById('asset');
+      let fromSelect = document.getElementById('fromField');
+      let toSelect = document.getElementById('toField');
+      let assetSelect = document.getElementById('assetField');
 
-      renderLoadingSelect(selFrom);
-      renderLoadingSelect(selTo);
-      renderLoadingSelect(selAsset);
+      renderLoadingSelect(fromSelect);
+      renderLoadingSelect(toSelect);
+      renderLoadingSelect(assetSelect);
 
       AlgoSigner.connect()
+        // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        .then((acctData) => {
-          renderAccountSelect(selFrom, acctData);
-          renderAccountSelect(selTo, acctData);
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(fromSelect, accountsData);
+          renderAccountSelect(toSelect, accountsData);
         })
-        .then(() => fetchAssets(selFrom.value))
-        .then((assetData) => renderAssetSelect(selAsset, assetData))
+        // fetch assets of the currently selected account
+        .then(() => fetchAssets(fromSelect.value))
+        // populate asset dropdown
+        .then((assetsData) => renderAssetSelect(assetSelect, assetsData))
+        // we're finished
         .then(() => hideProcessingModal())
         .catch((e) => {
           handleClientError(e.message);
@@ -284,30 +290,36 @@
         });
     }
 
+    /**
+     * Fetches assets belonging to an account
+     * @param {string} account The Algorand account address
+     * @return {array} array of assets associated with the account
+     */
     function fetchAssets(account) {
       if (account != -1) {
-        showProcessingModal();
-        document.getElementById('processingMessage').innerHTML = "Please wait...";
+        showProcessingModal("Please wait...");
 
-        let assetData = [];
+        let assetsData = [];
 
         return AlgoSigner.algod({
             ledger: 'TestNet',
             path: `/v2/accounts/${account}`
           })
-          .then((accountData) => {
-            return accountData.assets.reduce(
+          .then((accountsData) => {
+            // iterate through each returned asset and get information
+            return accountsData.assets.reduce(
               (promise, asset) => promise.then(() =>
                 AlgoSigner.indexer({
                   ledger: 'TestNet',
                   path: `/v2/assets/${asset['asset-id']}`
                 })
-                .then((d) => assetData.push(d))
+                .then((d) => assetsData.push(d))
               ),
               Promise.resolve());
           })
+          // we're finished
           .then(() => hideProcessingModal())
-          .then(() => assetData)
+          .then(() => assetsData)
           .catch((e) => {
             handleClientError(e.message);
             hideProcessingModal();
@@ -317,18 +329,23 @@
       }
     }
 
+    /**
+     * Sends a zero-value opt-in transaction for an asset 
+     * Required by the Algorand protocol to accept ASAs
+     */
     function signAndSendOptIn() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Sending transaction...";
+      showProcessingModal("Sending transaction...");
 
-      let assetId = Number(document.getElementById('asset').value);
-      let optInAccount = document.getElementById('to').value;
+      let assetId = Number(document.getElementById('assetField').value);
+      let optInAccount = document.getElementById('toField').value;
 
       AlgoSigner.connect()
+        // fetch current parameters
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
         }))
+        // sign new opt-in transaction
         .then((txParams) => AlgoSigner.sign({
           assetIndex: assetId,
           from: optInAccount,
@@ -342,10 +359,12 @@
           genesisHash: txParams['genesis-hash'],
           flatFee: true
         }))
+        // send signed transaction
         .then((signedTx) => AlgoSigner.send({
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
+        // wait for confirmation from the blockchain
         .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
         .then((d) => {
           // was successful
@@ -363,28 +382,32 @@
         });
     }
 
+    /**
+     * Signs a transaction using the current AlgoSigner wallet
+     */
     function signAndSendTransaction() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Sending transaction...";
+      showProcessingModal("Sending transaction...");
 
-      let assetId = Number(document.getElementById('asset').value);
-      let from = document.getElementById('from').value;
-      let amount = document.getElementById('amount').value;
-      let to = document.getElementById('to').value;
-      let note = document.getElementById('note').value;
+      let assetId = Number(document.getElementById('assetField').value);
+      let from = document.getElementById('fromField').value;
+      let amount = document.getElementById('amountField').value;
+      let to = document.getElementById('toField').value;
+      let note = document.getElementById('noteField').value;
 
       AlgoSigner.connect()
+        // fetch current parameters
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
         }))
+        // sign new transaction
         .then((txParams) => AlgoSigner.sign({
           assetIndex: assetId,
           from: from,
           amount: +amount,
           to: to,
           note: note,
-          type: 'axfer',
+          type: 'axfer', // ASA Transfer (axfer)
           fee: txParams['min-fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
@@ -392,10 +415,12 @@
           genesisHash: txParams['genesis-hash'],
           flatFee: true
         }))
+        // send signed transaction
         .then((signedTx) => AlgoSigner.send({
           ledger: 'TestNet',
           tx: signedTx.blob
         }))
+        // wait for confirmation from the blockchain
         .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
         .then((tx) => {
           // was successful
@@ -413,12 +438,12 @@
         });
     }
 
-    document.getElementById('from').addEventListener('change', function () {
-      let selAsset = document.getElementById('asset');
+    document.getElementById('fromField').addEventListener('change', function () {
+      let assetSelect = document.getElementById('assetField');
 
-      renderLoadingSelect(selAsset);
+      renderLoadingSelect(assetSelect);
       fetchAssets(this.value)
-        .then((assetData) => renderAssetSelect(selAsset, assetData))
+        .then((assetsData) => renderAssetSelect(assetSelect, assetsData))
     });
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);

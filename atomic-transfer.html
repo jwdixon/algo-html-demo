@@ -145,7 +145,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="from_left">
+                      <select id="fromAccountOnLeftSide">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -164,7 +164,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="asset_left">
+                      <select id="assetOnLeftSide">
                         <option>No assets available</option>
                       </select>
                     </div>
@@ -182,7 +182,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="amount_left">
+                    <input class="input" id="amountOnLeftSide">
                     <div class="icon is-small is-left">
                       <i class="fas fa-coins"></i>
                     </div>
@@ -198,7 +198,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="to_left">
+                      <select id="toAccountOnLeftSide">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -219,7 +219,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="from_right">
+                      <select id="fromAccountOnRightSide">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -238,7 +238,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="asset_right">
+                      <select id="assetOnRightSide">
                         <option>No assets available</option>
                       </select>
                     </div>
@@ -256,7 +256,7 @@
               <div class="field-body">
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
-                    <input class="input" id="amount_right">
+                    <input class="input" id="amountOnRightSide">
                     <div class="icon is-small is-left">
                       <i class="fas fa-coins"></i>
                     </div>
@@ -272,7 +272,7 @@
                 <div class="field">
                   <div class="control is-expanded has-icons-left">
                     <div class="select is-fullwidth">
-                      <select id="to_right">
+                      <select id="toAccountOnRightSide">
                         <option value="-1">No accounts available</option>
                       </select>
                     </div>
@@ -302,55 +302,71 @@
 
   <script>
     window.addEventListener("load", function () {
-      checkForAlgosigner();
+      checkForAlgosigner(); // see algosignerutils.js
     });
 
+    /**
+     * Fetches accounts belonging to the current AlgoSigner wallet
+     */
     function fetchAccounts() {
-      let selFromLeft = document.getElementById('from_left');
-      let selFromRight = document.getElementById('from_right');
-      let selToLeft = document.getElementById('to_left');
-      let selToRight = document.getElementById('to_right');
-      let selAssetLeft = document.getElementById('asset_left');
-      let selAssetRight = document.getElementById('asset_right');
+      showProcessingModal("Please wait...");
 
-      renderLoadingSelect(selFromLeft);
-      renderLoadingSelect(selToLeft);
-      renderLoadingSelect(selAssetLeft);
-      renderLoadingSelect(selFromRight);
-      renderLoadingSelect(selToRight);
-      renderLoadingSelect(selAssetRight);
+      let fromAccountOnLeftSideSelect = document.getElementById('fromAccountOnLeftSide');
+      let fromAccountOnRightSideSelect = document.getElementById('fromAccountOnRightSide');
+      let toAccountOnLeftSideSelect = document.getElementById('toAccountOnLeftSide');
+      let toAccountOnRightSideSelect = document.getElementById('toAccountOnRightSide');
+      let assetOnLeftSideSelect = document.getElementById('assetOnLeftSide');
+      let assetOnRightSideSelect = document.getElementById('assetOnRightSide');
+
+      renderLoadingSelect(fromAccountOnLeftSideSelect);
+      renderLoadingSelect(fromAccountOnRightSideSelect);
+      renderLoadingSelect(toAccountOnLeftSideSelect);
+      renderLoadingSelect(toAccountOnRightSideSelect);
+      renderLoadingSelect(assetOnLeftSideSelect);
+      renderLoadingSelect(assetOnRightSideSelect);
 
       AlgoSigner.connect()
+        // fetch accounts
         .then(() => AlgoSigner.accounts({
           ledger: 'TestNet'
         }))
-        .then((acctData) => {
-          renderAccountSelect(selFromLeft, acctData);
-          renderAccountSelect(selFromRight, acctData);
-          renderAccountSelect(selToLeft, acctData);
-          renderAccountSelect(selToRight, acctData);
+        // populate account dropdowns
+        .then((accountsData) => {
+          renderAccountSelect(fromAccountOnLeftSideSelect, accountsData);
+          renderAccountSelect(fromAccountOnRightSideSelect, accountsData);
+          renderAccountSelect(toAccountOnLeftSideSelect, accountsData);
+          renderAccountSelect(toAccountOnRightSideSelect, accountsData);
         })
-        .then(() => fetchAssets(selFromLeft.value))
-        .then((assetData) => renderAssetSelect(selAssetLeft, assetData))
-        .then(() => fetchAssets(selFromRight.value))
-        .then((assetData) => renderAssetSelect(selAssetRight, assetData))
+        // fetch assets of the currently selected account
+        .then(() => fetchAssets(fromAccountOnLeftSideSelect.value))
+        .then((assetsData) => renderAssetSelect(assetOnLeftSideSelect, assetsData))
+        // fetch assets of the currently selected account
+        .then(() => fetchAssets(fromAccountOnRightSideSelect.value))
+        .then((assetsData) => renderAssetSelect(assetOnRightSideSelect, assetsData))
+        .then(() => hideProcessingModal())
+        // we're finished
         .catch((e) => {
           handleClientError(e.message);
           hideProcessingModal();
         });
     }
 
+    /**
+     * Fetches assets belonging to an account
+     * @param {string} account The Algorand account address
+     * @return {array} array of assets associated with the account
+     */
     function fetchAssets(account) {
       if (account != -1) {
-        showProcessingModal();
-        document.getElementById('processingMessage').innerHTML = "Please wait...";
+        showProcessingModal("Please wait...");
 
-        let assetData = [];
+        let assetsData = [];
 
         return AlgoSigner.algod({
             ledger: 'TestNet',
             path: `/v2/accounts/${account}`
           })
+          // iterate through each returned asset and get information
           .then((accountData) => {
             return accountData.assets.reduce(
               (promise, asset) => promise.then(() =>
@@ -358,12 +374,12 @@
                   ledger: 'TestNet',
                   path: `/v2/assets/${asset['asset-id']}`
                 })
-                .then((d) => assetData.push(d))
+                .then((d) => assetsData.push(d))
               ),
               Promise.resolve());
           })
           .then(() => hideProcessingModal())
-          .then(() => assetData)
+          .then(() => assetsData)
           .catch((e) => {
             handleClientError(e.message);
             hideProcessingModal();
@@ -373,9 +389,11 @@
       }
     }
 
-    function tradeAssets() {
-      showProcessingModal();
-      document.getElementById('processingMessage').innerHTML = "Sending transaction...";
+    /**
+     * Constructs, signs and sends an atomic transaction
+     */
+    function sendTradeAssetsTransaction() {
+      showProcessingModal("Sending transaction...");
 
       let tx1 = {};
       let tx2 = {};
@@ -384,15 +402,17 @@
       let txGroup = [];
 
       AlgoSigner.connect()
+        // fetch current parameters
         .then(() => AlgoSigner.algod({
           ledger: 'TestNet',
           path: '/v2/transactions/params'
         }))
+        // create transactions
         .then((txParams) => {
-          let assetId = Number(document.getElementById('asset_left').value);
-          let from = document.getElementById('from_left').value;
-          let amount = document.getElementById('amount_left').value;
-          let to = document.getElementById('to_left').value;
+          let from = document.getElementById('fromAccountOnLeftSide').value;
+          let to = document.getElementById('toAccountOnLeftSide').value;
+          let assetId = Number(document.getElementById('assetOnLeftSide').value);
+          let amount = document.getElementById('amountOnLeftSide').value;
 
           tx1 = {
             assetIndex: assetId,
@@ -408,10 +428,10 @@
             flatFee: true
           };
 
-          assetId = Number(document.getElementById('asset_right').value);
-          from = document.getElementById('from_right').value;
-          amount = document.getElementById('amount_right').value;
-          to = document.getElementById('to_right').value;
+          from = document.getElementById('fromAccountOnRightSide').value;
+          to = document.getElementById('toAccountOnRightSide').value;
+          assetId = Number(document.getElementById('assetOnRightSide').value);
+          amount = document.getElementById('amountOnRightSide').value;
 
           tx2 = {
             assetIndex: assetId,
@@ -427,16 +447,18 @@
             flatFee: true
           };
 
+          // assigns a group id to the transaction set
           return algosdk.assignGroupID([tx1, tx2]);
         })
-        .then((d) => {
-          txGroup = d;
+        .then((txGroup) => {
           // Modify the group fields in original transactions to be base64 encoded strings
           tx1.group = txGroup[0].group.toString('base64');
           tx2.group = txGroup[1].group.toString('base64');
         })
+        // sign transaction 1
         .then(() => AlgoSigner.sign(tx1))
         .then((d) => signedTx1 = d)
+        // sign transaction 2
         .then(() => AlgoSigner.sign(tx2))
         .then((d) => signedTx2 = d)
         .then(() => {
@@ -460,6 +482,7 @@
             tx: grouped_txns
           });
         })
+        // wait for confirmation from the blockchain
         .then((tx) => waitForAlgosignerConfirmation(tx)) // see algosignerutils.js
         .then((tx) => {
           // was successful
@@ -477,24 +500,24 @@
         });
     }
 
-    document.getElementById('from_left').addEventListener('change', function () {
-      let selAssetLeft = document.getElementById('asset_left');
+    document.getElementById('fromAccountOnLeftSide').addEventListener('change', function () {
+      let assetOnLeftSideSelect = document.getElementById('assetOnLeftSide');
 
-      renderLoadingSelect(selAssetLeft);
+      renderLoadingSelect(assetOnLeftSideSelect);
       fetchAssets(this.value)
-        .then((assetData) => renderAssetSelect(selAssetLeft, assetData))
+        .then((assetsData) => renderAssetSelect(assetOnLeftSideSelect, assetsData))
     });
 
-    document.getElementById('from_right').addEventListener('change', function () {
-      let selAssetRight = document.getElementById('asset_right');
+    document.getElementById('fromAccountOnRightSide').addEventListener('change', function () {
+      let assetOnRightSideSelect = document.getElementById('assetOnRightSide');
 
-      renderLoadingSelect(selAssetRight);
+      renderLoadingSelect(assetOnRightSideSelect);
       fetchAssets(this.value)
-        .then((assetData) => renderAssetSelect(selAssetRight, assetData))
+        .then((assetsData) => renderAssetSelect(assetOnRightSideSelect, assetsData))
     });
 
     document.getElementById('btnRefreshAccounts').addEventListener('click', fetchAccounts);
-    document.getElementById('btnTradeAssets').addEventListener('click', tradeAssets);
+    document.getElementById('btnTradeAssets').addEventListener('click', sendTradeAssetsTransaction);
   </script>
   <script defer="" src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
   <script src="static/js/algosdk.min.js"></script>
