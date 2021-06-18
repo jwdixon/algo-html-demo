@@ -254,6 +254,7 @@
         .then((accountsData) => {
           renderAccountSelect(fromSelect, accountsData);
           renderAccountSelect(toSelect, accountsData);
+          hideProcessingModal();
         })
         .catch((e) => {
           handleClientError(e.message);

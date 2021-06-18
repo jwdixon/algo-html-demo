@@ -329,7 +329,8 @@
         .then((d) => d.json())
         .then((d) => {
           if (d["error"]) {
-            throw d["error"];
+            var e = {"message": d["error"].response.text};
+            throw e;
           } else {
             contractAddress = d.contractAddress;
           }

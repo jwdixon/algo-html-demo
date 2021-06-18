@@ -1,3 +1,8 @@
+/**
+ * Split Contract
+ * @module split
+ */
+
 module.exports = function () {
   // let's import the needed modules
   const algosdk = require('algosdk');
@@ -13,7 +18,19 @@ module.exports = function () {
   const server = 'https://testnet-algorand.api.purestake.io/ps2';
   const port = '';
 
-  this.createSplitContract = async function (sender, recipient1, ratio1, 
+  /**
+   * Creates a Split smart contract
+   *
+   * @memberof split
+   * @async
+   * @param {string} sender The wallet address of the person sending the funds
+   * @param {string} recipient1 The address of the person receiving the first portion
+   * @param {string} ratio1 The ratio of funds for the person receiving the first portion
+   * @param {string} recipient2 The address of the person receiving the second portion
+   * @param {string} ratio2 The ratio of funds for the person receiving the second portion
+   * @returns {string} The address of the created split contract
+   * */
+  this.createSplitContract = async function (sender, recipient1, ratio1,
     recipient2, ratio2) {
     // create the client
     let algodClient = new algosdk.Algodv2(token, server, port);
@@ -27,7 +44,7 @@ module.exports = function () {
     let ratd = parseInt(ratio2);
     let expiryRound = txParams.lastRound + parseInt(10000);
     let minPay = 3000;
-    let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
+    let maxFee = 2000; // we set the max fee to avoid account bleed from excessive fees
 
     // create the split contract template
     console.log(`Creating split contract...`);
@@ -49,6 +66,15 @@ module.exports = function () {
     return address;
   }
 
+  /**
+   * Executes a Split smart contract
+   *
+   * @memberof split
+   * @async
+   * @param {string} contractAddress The address of a split contract
+   * @param {string} amount The amount of microAlgos to be split
+   * @returns {string} The ID of the transaction that performed the split
+   */
   this.executeSplitContract = async function (contractAddress, amount) {
     // read the TEAL program from local storage
     const data = await fs.readFile(`static/contracts/${contractAddress}`);
@@ -59,7 +85,7 @@ module.exports = function () {
 
     let txParams = await algodClient.getTransactionParams().do();
 
-    let txnBytes = splitTemplate.getSplitFundsTransaction(splitProgram, amount, 
+    let txnBytes = splitTemplate.getSplitFundsTransaction(splitProgram, amount,
       txParams.firstRound, txParams.lastRound, txParams.fee, txParams.genesisHash);
 
     console.log(`Attempting to execute contract...`);

@@ -53,8 +53,10 @@ http.createServer(function (request, response) {
       })
       .catch((e) => {
         console.log(e);
-        response.write(e.message);
-        response.statusCode = e.status;
+        response.writeHead(e.status);
+        response.write(JSON.stringify({
+          "error": e
+        }));
         response.end();
       });
   } else if (filePath.includes('./executeBubblegumLimitContract')) {
@@ -74,8 +76,10 @@ http.createServer(function (request, response) {
       })
       .catch((e) => {
         console.log(e);
-        response.write(e.message);
-        response.statusCode = e.status;
+        response.writeHead(e.status);
+        response.write(JSON.stringify({
+          "error": e
+        }));
         response.end();
       });
   } else if (filePath.includes('./createHashTimeLockContract')) {
@@ -96,8 +100,10 @@ http.createServer(function (request, response) {
       })
       .catch((e) => {
         console.log(e);
-        response.write(e.message);
-        response.statusCode = e.status;
+        response.writeHead(e.status);
+        response.write(JSON.stringify({
+          "error": e
+        }));
         response.end();
       });
   } else if (filePath.includes('./unlockHashTimeLockContract')) {
@@ -117,8 +123,10 @@ http.createServer(function (request, response) {
       })
       .catch((e) => {
         console.log(e);
-        response.write(e.message);
-        response.statusCode = e.status;
+        response.writeHead(e.status);
+        response.write(JSON.stringify({
+          "error": e
+        }));
         response.end();
       });
     
@@ -140,8 +148,10 @@ http.createServer(function (request, response) {
       })
       .catch((e) => {
         console.log(e);
-        response.write(e.message);
-        response.statusCode = e.status;
+        response.writeHead(e.status);
+        response.write(JSON.stringify({
+          "error": e
+        }));
         response.end();
       });
   } else if (filePath.includes('./executeSplitContract')) {
@@ -161,8 +171,10 @@ http.createServer(function (request, response) {
       })
       .catch((e) => {
         console.log(e);
-        response.write(e.message);
-        response.statusCode = e.status;
+        response.writeHead(e.status);
+        response.write(JSON.stringify({
+          "error": e
+        }));
         response.end();
       });
   } else {

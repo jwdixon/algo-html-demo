@@ -1,3 +1,8 @@
+/**
+ * Limit Order Smart Contract
+ * @module limitorder
+ */
+
 module.exports = function () {
   // let's import the needed modules
   const algosdk = require('algosdk');
@@ -7,7 +12,7 @@ module.exports = function () {
 
   // constants to use for the Algod client
   const token = {
-    'X-API-Key': `${process.env.API_KEY}` // 'YOUR PURESTAKE API KEY HERE'
+    'X-API-Key': `${process.env.API_KEY}`
   }
 
   const server = 'https://testnet-algorand.api.purestake.io/ps2';
@@ -19,6 +24,14 @@ module.exports = function () {
     "minor maximum jaguar athlete excess sound ridge slow palm bid tackle " +
     "honey analyst absent clarify";
 
+  /**
+   * Creates a Limit Order smart contract
+   *
+   * @memberof limitorder
+   * @async
+   * @param {string} contractOwner The wallet address of the contract owner
+   * @returns {string} The address of the created limit contract
+   */
   this.createBubblegumLimitContract = async function (contractOwner) {
     // create the client
     let algodClient = new algosdk.Algodv2(token, server, port);
@@ -29,10 +42,10 @@ module.exports = function () {
 
     let ratn = parseInt(1); // 1 BUBBLE
     let ratd = parseInt(1000000); // for 1 Algo
-    let assetID = 15431290;  // ID of the BUBBLE asset
-    let minTrade = 999999;  // minimum number of microAlgos to accept
+    let assetID = 15431290; // ID of the BUBBLE asset
+    let minTrade = 999999; // minimum number of microAlgos to accept
     let expiryRound = txParams.lastRound + parseInt(10000);
-    let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
+    let maxFee = 2000; // we set the max fee to avoid account bleed from excessive fees
 
     console.log(`Creating limit order contract...`);
     // create the limit contract template
@@ -61,7 +74,7 @@ module.exports = function () {
 
     console.log(`Funding contract with the minimum amount of µAlgos required...`);
     let note = algosdk.encodeObj("Contract funding transaction");
-    let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr, 
+    let fundingTx = algosdk.makePaymentTxnWithSuggestedParams(assetOwner.addr,
       address, 100000 + (1000 * 2), undefined, note, txParams);
     let signedFundingTx = fundingTx.signTxn(assetOwner.sk);
     let resultTx = (await algodClient.sendRawTransaction(signedFundingTx).do());
@@ -72,6 +85,14 @@ module.exports = function () {
     return address;
   }
 
+  /**
+   * Executes a Limit Order smart contract
+   *
+   * @memberof limitorder
+   * @async
+   * @param {string} contractAddress The address of a limit contract
+   * @returns {string} The ID of the transaction that performed the asset swap
+   */
   this.executeBubblegumLimitContract = async function (contractAddress) {
     // read the TEAL program from local storage
     const data = await fs.readFile(`static/contracts/${contractAddress}`);
@@ -92,7 +113,7 @@ module.exports = function () {
 
     console.log(`Attempting to execute contract...`);
     let txnBytes = limitTemplate.getSwapAssetsTransaction(limitProgram, assetAmount,
-      microAlgoAmount, secretKey, txParams.fee, txParams.firstRound, 
+      microAlgoAmount, secretKey, txParams.fee, txParams.firstRound,
       txParams.lastRound, txParams.genesisHash);
     let tx = (await algodClient.sendRawTransaction(txnBytes).do());
     await algoutils.waitForConfirmation(algodClient, tx.txId);

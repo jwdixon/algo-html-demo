@@ -340,7 +340,8 @@
         .then((d) => d.json())
         .then((d) => {
           if (d["error"]) {
-              throw d["error"];
+            var e = {"message": d["error"].response.text};
+            throw e;
           } else {
             // normally you would store this kind of stuff securely in a database
             // for this demo we're going to store it in memory
@@ -367,7 +368,7 @@
           to: currentContractAddress,
           amount: +amount + 100000 + txParams['min-fee'],
           note: 'HTLC Funding Transaction',
-          type: 'pay',  // Payment (pay)
+          type: 'pay', // Payment (pay)
           fee: txParams['min-fee'],
           firstRound: txParams['last-round'],
           lastRound: txParams['last-round'] + 1000,
@@ -413,7 +414,8 @@
         .then((d) => d.json())
         .then((d) => {
           if (d["error"]) {
-              throw d["error"];
+            var e = {"message": d["error"].response.text};
+            throw e;
           } else {
             // was successful
             document.getElementById('successMessage').innerHTML = "The transaction with TxID " + d['txId'] +

@@ -1,4 +1,9 @@
-module.exports = function() {
+/**
+ * Hash Time Lock Smart Contract (HTLC)
+ * @module hashtimelock
+ */
+
+module.exports = function () {
   // let's import the needed modules
   const algosdk = require('algosdk');
   const fs = require('fs').promises;
@@ -9,13 +14,24 @@ module.exports = function() {
 
   // constants to use for the Algod client
   const token = {
-    'X-API-Key': `${process.env.API_KEY}` // 'YOUR PURESTAKE API KEY HERE'
+    'X-API-Key': `${process.env.API_KEY}`
   }
 
   const server = 'https://testnet-algorand.api.purestake.io/ps2';
   const port = '';
 
-  this.createHashTimeLockContract = async function(contractOwner, contractReceiver) {
+  /**
+   * Creates a Hash Time Lock smart contract
+   *
+   * @memberof hashtimelock
+   * @async
+   * @param {string} contractOwner The wallet address of the contract owner
+   * @param {string} contractReceiver The wallet address of the account that will 
+   * receive the funds in the contract if they unlock it successfully
+   * @returns {Array<String>} An array containing the address 
+   * of the HTLC and the preimage
+   */
+  this.createHashTimeLockContract = async function (contractOwner, contractReceiver) {
     // create the client
     let algodClient = new algosdk.Algodv2(token, server, port);
 
@@ -23,8 +39,8 @@ module.exports = function() {
 
     // INPUTS
     let expiryRound = txParams.lastRound + parseInt(10000);
-    let maxFee = 2000;  // we set the max fee to avoid account bleed from excessive fees
-    
+    let maxFee = 2000; // we set the max fee to avoid account bleed from excessive fees
+
     // generate the preimage and image
     let hashFn = "sha256";
 
@@ -35,7 +51,7 @@ module.exports = function() {
 
     console.log(`Passphrase: ${strRandomWords}`);
     console.log(`SHA-256 hash (image): ${hashImg}`);
-    
+
     console.log(`Creating hash time lock contract...`);
     let htlc = new htlcTemplate.HTLC(contractOwner, contractReceiver, hashFn, hashImg,
       expiryRound, maxFee);
@@ -54,7 +70,17 @@ module.exports = function() {
     return [address, strRandomWords];
   }
 
-  this.unlockHashTimeLockContract = async function(contractAddress, closeRemainderTo, 
+  /**
+   * Unlocks an HTLC
+   *
+   * @memberof hashtimelock
+   * @async
+   * @param {string} contractAddress The address of the HTLC
+   * @param {string} closeRemainderTo The wallet address of the account that will 
+   * receive the funds in the contract if they unlock it successfully
+   * @returns {string} The ID of the transaction that performed the unlock
+   */
+  this.unlockHashTimeLockContract = async function (contractAddress, closeRemainderTo,
     preimageBase64) {
     // read the TEAL program from local storage
     const data = await fs.readFile(`static/contracts/${contractAddress}`);
@@ -81,7 +107,7 @@ module.exports = function() {
 
     // Create logic signed transaction
     console.log(`Creating logic signature from hash image and HTLC program...`);
-    let args = [ Buffer.from(preimageBase64, 'base64').toString('ascii') ];
+    let args = [Buffer.from(preimageBase64, 'base64').toString('ascii')];
     let lsig = algosdk.makeLogicSig(htlcProgram, args);
     let rawSignedTxn = algosdk.signLogicSigTransaction(txn, lsig);
 

@@ -271,6 +271,7 @@
         // populate account dropdowns
         .then((accountsData) => {
           renderAccountSelect(fromSelect, accountsData);
+          hideProcessingModal();
         })
         .catch((e) => {
           handleClientError(e.message);
