@@ -61,6 +61,12 @@ module.exports = function () {
     console.log(`Contract created at address ${address}.`);
     console.log(`Writing contract to file at static/contracts/${address}...`);
 
+    try {
+      await fs.access(`static/contracts/`);
+    } catch (e) {
+      await fs.mkdir(`static/contracts/`);
+    }
+
     await fs.writeFile(`static/contracts/${address}`, program);
 
     // next, we fund the contract account with the minimum amount of microAlgos required
