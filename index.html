@@ -93,15 +93,20 @@
       </p>
 
       <h2 class="title">Introduction</h2>
-      <div class="box">
-        <p class="pb-2">Algorand’s technology enables a set of high performing Layer-1 blockchains that provide security, scalability, complete transaction finality, built in privacy, Co-Chains, and advanced smart contracts that are essential in a FutureFi world.</p>
-        <p class="pb-2">This demo was built to communicate these advanced features in an easy-to-understand way.</p>
-        <p class="pb-2"><strong>Before you begin, you should have the <a target="_blank" href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">AlgoSigner Google Chrome extension</a> installed, as this demo makes extensive use of it.</strong> 
-          You should also make a couple of wallets on Algorand <strong>TestNet</strong> and use the 
-          <a target="_blank" href="https://testnet.algoexplorer.io/dispenser">TestNet ALGO Faucet</a> to generate Algos for them, as these exercises demonstrate how to move assets between two or more addresses.</p>
-      </div>
+      <p class="pb-2">Algorand’s technology enables a set of high performing Layer-1 blockchains that provide
+        security, scalability, complete transaction finality, built in privacy, Co-Chains, and advanced smart
+        contracts that are essential in a FutureFi world.</p>
+      <p class="pb-4">This demo was built to communicate these advanced features in an easy-to-understand way.</p>
 
       <h2 class="title">Transactions</h2>
+      <div class="notification is-info is-light">
+        <p class="pb-2"><strong>Before you begin, you should have the <a target="_blank"
+              href="https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm">AlgoSigner
+              Google Chrome extension</a> installed, as this demo makes extensive use of it.</strong>
+          You should also make a couple of wallets on Algorand <strong>TestNet</strong> and use the
+          <a target="_blank" href="https://testnet.algoexplorer.io/dispenser">TestNet ALGO Faucet</a> to generate Algos
+          for them, as these exercises demonstrate how to move assets between two or more addresses.</p>
+      </div>
       <div class="columns is-multiline">
         <div class="column is-half">
           <a href="algo-transfer.html">
@@ -131,18 +136,26 @@
           <a href="atomic-transfer.html">
             <div class="box">
               <h4 class="title is-4">Atomic Transfer</h4>
-              <p>Group two transactions together to be executed atomically - either both transactions succeed or they both fail.</p>
+              <p>Group two transactions together to be executed atomically - either both transactions succeed or they
+                both fail.</p>
             </div>
           </a>
         </div>
       </div>
       <h2 class="title">Smart Contracts</h2>
+      <div class="notification is-info is-light">
+        <p class="pb-2"><strong>In order to run the Smart Contract portion of this demo, you need a <a target="_blank"
+          href="https://www.purestake.com/">PureStake</a> API
+            Key.</strong> <a target="_blank" href="https://developer.purestake.io/signup">Get your personal API Key</a> from PureStake and add it to the .env-EXAMPLE file in the root
+          folder, then rename .env-EXAMPLE to .env and start the demo again.</p>
+      </div>
       <div class="columns">
         <div class="column">
           <a href="limit-order.html">
             <div class="box">
               <h4 class="title is-4">Limit Order</h4>
-              <p>A Limit Order is a Smart Contract that only pays out funds when a limit amount is reached in the contract logic.</p>
+              <p>A Limit Order is a Smart Contract that only pays out funds when a limit amount is reached in the
+                contract logic.</p>
             </div>
           </a>
         </div>
@@ -150,7 +163,8 @@
           <a href="hash-time-lock.html">
             <div class="box">
               <h4 class="title is-5">Hash Time Lock Contract</h4>
-              <p>A Hash Time Lock Contract is a Smart Contract that only pays out funds when a certain "preimage" is supplied to it. 
+              <p>A Hash Time Lock Contract is a Smart Contract that only pays out funds when a certain "preimage" is
+                supplied to it.
                 Think of a preimage as a password or passphrase you need to unlock the funds.</p>
             </div>
           </a>
@@ -159,7 +173,8 @@
           <a href="split-contract.html">
             <div class="box">
               <h4 class="title is-4">Split Contract</h4>
-              <p>A Split Contract is a Smart Contract that can be used to disburse a payment amount to two wallets in defined proportions.</p>
+              <p>A Split Contract is a Smart Contract that can be used to disburse a payment amount to two wallets in
+                defined proportions.</p>
             </div>
           </a>
         </div>
